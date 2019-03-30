@@ -25,11 +25,11 @@ typedef enum scheduleStrategy{
 } ScheduleStrategy;
 
 /* schedular functions */
-static inline void sched_set_strategy(ScheduleStrategy); 
-static inline void sched_add_process(ProcessInfo *);
-static inline void sched_run_current_process(void);
-static inline void sched_remove_current_process(void); // called when current process ends
-static inline void sched_switch_process(void); // for RR. Please use sigstop/sigcont.
+static inline void pool_set_strategy(ScheduleStrategy); 
+static inline void pool_add_process(ProcessInfo *);
+static inline void pool_run_current_process(void);
+static inline void pool_remove_current_process(void); // called when current process ends
+static inline void pool_switch_process(void); // for RR. Please use sigstop/sigcont.
 
 /* The loop that should be run by children process */
 static inline void run_single_unit(void)
