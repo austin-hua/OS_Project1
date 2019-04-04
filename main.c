@@ -71,6 +71,8 @@ int main() {
         P[i].pid = ;
         */
         P[i].status = NOT_STARTED;
-        timespec_get(&P[i].time_record, TIME_UTC);
     }
+    
+    /*for time retrieval when process begins execution*/
+    //timespec_get(&P[i].time_record, TIME_UTC);
 }
