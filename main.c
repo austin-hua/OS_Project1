@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <assert.h>
+
 #include <sys/wait.h>
 
 /* one unit, one million iterations */
@@ -31,6 +34,7 @@ ScheduleStrategy setStrategy(char strat[]) {
     if(!strcmp(strat, "FIFO")) return FIFO;
     if(!strcmp(strat, "STF")) return STF;
     if(!strcmp(strat, "PSTF")) return PSTF;
+    assert(0);
 }
 
 //for debugging
