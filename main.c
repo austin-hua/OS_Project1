@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include <sys/wait.h>
+#include <sched.h>
 
 /* one unit, one million iterations */
 #define UNIT 1000000UL
@@ -57,6 +58,17 @@ static inline void run_single_unit(void) {
     for(i = 0; i < UNIT; i++) {}
 }
 
+static inline void monopolize_cpu(void)
+{
+    struct sched_param scheduler_param;
+    scheduler_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    int res = sched_setscheduler(0 /* this process */, SCHED_FIFO, &scheduler_param);
+    if (res != 0){
+        perror("Can't set scheduler!");
+        exit(res);
+    }
+}
+
 int main() {
     char strat[4];
     scanf("%s", strat);
@@ -76,7 +88,8 @@ int main() {
         */
         P[i].status = NOT_STARTED;
     }
-    
+    monopolize_cpu();
+
     /*for time retrieval when process begins execution*/
     //timespec_get(&P[i].time_record, TIME_UTC);
 }
