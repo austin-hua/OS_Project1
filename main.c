@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <sched.h>
 
+#define PROCESS_NAME_MAX 100
 /* one unit, one million iterations */
 #define UNIT 1000000UL
 
@@ -23,7 +24,7 @@ typedef struct ProcessInfo {
     int execution_time;
     pid_t pid;
     ProcessStatus status;
-    char *name;
+    char *name; // Not an array; please allocate memory before writing.
 } ProcessInfo;
 
 typedef enum scheduleStrategy {
@@ -69,6 +70,15 @@ static inline void monopolize_cpu(void)
     }
 }
 
+static inline void read_single_entry(ProcessInfo *p)
+{
+    char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
+    scanf("%s", process_name);
+    p->name = process_name;
+    scanf("%d%d", &p->ready_time, &p->execution_time);
+    p->status = NOT_STARTED;
+}
+
 int main() {
     char strat[4];
     scanf("%s", strat);
@@ -80,13 +90,7 @@ int main() {
     ProcessInfo P[N];
 
     for(int i = 0; i < N; i++) {
-        scanf("%s", P[i].name);
-        scanf("%d%d", &P[i].ready_time, &P[i].execution_time);
-        /*
-        fork();
-        P[i].pid = ;
-        */
-        P[i].status = NOT_STARTED;
+        read_single_entry(&P[i]);
     }
     monopolize_cpu();
 
