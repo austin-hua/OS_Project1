@@ -5,7 +5,9 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <assert.h>
+#include <errno.h>
 
+#include <unistd.h>
 #include <sys/wait.h>
 #include <sched.h>
 
@@ -59,15 +61,37 @@ static inline void run_single_unit(void) {
     for(i = 0; i < UNIT; i++) {}
 }
 
-static inline void monopolize_cpu(void)
+/* for monopolizing cpu */
+static inline void set_my_priority(int priority)
 {
     struct sched_param scheduler_param;
-    scheduler_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+    scheduler_param.sched_priority = priority;
     int res = sched_setscheduler(0 /* this process */, SCHED_FIFO, &scheduler_param);
     if (res != 0){
         perror("Can't set scheduler!");
         exit(res);
     }
+}
+static inline void set_parent_priority(void)
+{
+    int priority = sched_get_priority_max(SCHED_FIFO);
+    set_my_priority(priority);
+}
+
+static inline void set_child_priority(void)
+{
+    int priority = sched_get_priority_max(SCHED_FIFO);
+    priority -= 1;
+    set_my_priority(priority);
+}
+
+pid_t my_fork()
+{
+    pid_t fork_res = fork();
+    if (fork_res == 0){
+        set_child_priority();
+    }
+    return fork_res;
 }
 
 static inline void read_single_entry(ProcessInfo *p)
@@ -92,8 +116,123 @@ int main() {
     for(int i = 0; i < N; i++) {
         read_single_entry(&P[i]);
     }
-    monopolize_cpu();
 
     /*for time retrieval when process begins execution*/
     //timespec_get(&P[i].time_record, TIME_UTC);
+}
+
+/* The following functions are for testing */
+void priority_test(void)
+{
+    /* Tests whether this process has priority over all other processes on this machine.
+     * Expected behavior:
+     * If run as root, the program should freeze for several seconds.
+     * Otherwise, the program prints an error message. */
+    set_parent_priority();
+    for(int i = 0; i < 1000; i++){
+        run_single_unit();
+    }
+}
+
+bool parent_is_terminated(void)
+{
+    // The parent terminated so the child is adopted by init (whose pid is 1)
+    return getppid() == 1;
+}
+
+void fork_test(void)
+{
+    /* Tests if the children runs only if the parent has done all its stuff.
+     * Expected behavior:
+     * If run as root, the program should freeze for several seconds,
+     * then prints "Success"
+     */
+    set_parent_priority();
+    pid_t pid = my_fork();
+    if (pid != 0) { /* parent, who should have priority */
+        for(int i = 0; i < 1000; i++){
+            run_single_unit();
+        }
+    } else { /* Child, who should run after the parent terminates. */
+        if (parent_is_terminated()){
+            printf("Success\n");
+        } else {
+            printf("Error: the child runs before the parent terminates.\n");
+        }
+    }
+}
+
+void fork_priority_test(void)
+{
+    /* Tests if the parent has priority over its children,
+     * even if the parent tries to give up its time slice.
+     * Expected behavior:
+     * If run as root, the program should freeze for several seconds,
+     * then prints "Success"
+     */
+    set_parent_priority();
+    pid_t pid = my_fork();
+    if (pid != 0) {
+        sched_yield();
+        for(int i = 0; i < 1000; i++){
+            run_single_unit();
+        }
+    } else {
+        if (parent_is_terminated()){
+            printf("Success\n");
+        } else {
+            printf("Error: the child runs before the parent terminates.\n");
+        }
+    }
+}
+
+void fork_block_test(void)
+{
+    /* Tests if the parent is blocked, then the children can gets its priority.
+     * Expected behavior: If run as root, then a message is printed
+     * before the program freezes for 10 seconds.
+     */
+    set_parent_priority();
+    pid_t pid = my_fork();
+    if (pid != 0) {
+        sleep(10);
+    } else {
+        if(parent_is_terminated()){
+            printf("Error: The child runs after the parent terminates");
+        } else {
+            printf("Success\n");
+        }
+    }
+}
+
+void sigalrmtest(int unused)
+{
+}
+void fork_signal_test(void)
+{
+    /* Tests if the parent can receive signal even when a child is running 
+     * Expected behavior: The program freezes for 1 second, prints an "awoken by a signal" message,
+     * then keeps freezing for a few seconds, then prints a message.
+     */
+
+    set_parent_priority();
+    signal(SIGALRM, sigalrmtest);
+    // block sigalrm
+    sigset_t old_mask, sigalrm_mask;
+    sigemptyset(&sigalrm_mask);
+    sigaddset(&sigalrm_mask, SIGALRM);
+    sigprocmask(SIG_BLOCK, &sigalrm_mask, &old_mask);
+    alarm(1);
+    pid_t pid = my_fork();
+    if (pid != 0){
+        // unblock siglarm
+        sigsuspend(&old_mask);
+        printf("The parent is awoken by a signal!\n");
+        wait(NULL);
+    } else {
+        for(volatile unsigned long  i = 0; i < 500; i++){
+            run_single_unit();
+        }
+        printf("IF the parent has been awoken by a signal, then success, else error.\n");
+    }
 }
