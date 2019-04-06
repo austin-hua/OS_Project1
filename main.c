@@ -94,6 +94,22 @@ pid_t my_fork()
     return fork_res;
 }
 
+/* systemcall wrapper */
+
+void sys_log_process_start(pid_t pid, struct timespec *start_time)
+{
+    // This function writes current time to start_time. 
+    // Does not do logging, but I can't come up with a better name.
+    // This is logged at user space for performance reasons.
+    syscall(335, pid, start_time);
+}
+
+void sys_log_process_end(pid_t pid, const struct timespec *start_time)
+{
+    // This function writes start_time and current time into kernel logs.
+    syscall(336, pid, start_time);
+}
+
 static inline void read_single_entry(ProcessInfo *p)
 {
     char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
