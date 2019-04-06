@@ -30,14 +30,14 @@ typedef struct ProcessInfo {
 } ProcessInfo;
 
 typedef enum scheduleStrategy {
-    FIFO, RR, STF, PSTF
+    FIFO, RR, SJF, PSJF
 } ScheduleStrategy;
 
 ScheduleStrategy setStrategy(char strat[]) {
     if(!strcmp(strat, "RR")) return RR;
     if(!strcmp(strat, "FIFO")) return FIFO;
-    if(!strcmp(strat, "STF")) return STF;
-    if(!strcmp(strat, "PSTF")) return PSTF;
+    if(!strcmp(strat, "SJF")) return SJF;
+    if(!strcmp(strat, "PSJF")) return PSJF;
     assert(0);
 }
 
@@ -103,7 +103,7 @@ static inline void read_single_entry(ProcessInfo *p)
     p->status = NOT_STARTED;
 }
 
-int main() {
+int main(void) {
     char strat[4];
     scanf("%s", strat);
 
