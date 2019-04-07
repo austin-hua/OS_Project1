@@ -21,7 +21,6 @@ typedef enum ProcessStatus {
 } ProcessStatus;
 
 typedef struct ProcessInfo {
-    struct timespec time_record;
     int ready_time;
     int execution_time;
     pid_t pid;
