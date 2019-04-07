@@ -119,19 +119,29 @@ static inline void read_single_entry(ProcessInfo *p)
     p->status = NOT_STARTED;
 }
 
-int main(void) {
+ProcessInfo *all_process_info;
+int num_process; // number of processes
+
+void read_process_info(void)
+{ 
+    scanf("%d", &num_process);
+
+    all_process_info =  (ProcessInfo *) malloc(num_process * sizeof(ProcessInfo));
+    for(int i = 0; i < num_process; i++) {
+	read_single_entry(&all_process_info[i]);
+    }
+
+    return;
+}
+
+int main(void)
+{
     char strat[4];
     scanf("%s", strat);
 
     ScheduleStrategy S = setStrategy(strat);
-    int N; //number of processes
-    scanf("%d", &N);
 
-    ProcessInfo P[N];
-
-    for(int i = 0; i < N; i++) {
-        read_single_entry(&P[i]);
-    }
+    read_process_info();
 
     /*for time retrieval when process begins execution*/
     //timespec_get(&P[i].time_record, TIME_UTC);
