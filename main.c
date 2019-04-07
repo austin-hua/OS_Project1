@@ -20,6 +20,11 @@ typedef enum ProcessStatus {
     NOT_STARTED, RUNNING, STOPPED 
 } ProcessStatus;
 
+typedef struct ProcessTimeRecord { // for logging
+    pid_t pid;
+    struct timespec start_time;
+} ProcessTimeRecord;
+
 typedef struct ProcessInfo {
     int ready_time;
     int time_needed; // Same as execution time in the problem description i.e. time needed to run the process.
@@ -96,18 +101,15 @@ pid_t my_fork()
 
 /* systemcall wrapper */
 
-void sys_log_process_start(pid_t pid, struct timespec *start_time)
+static void sys_log_process_start(ProcessTimeRecord *p)
 {
-    // This function writes current time to start_time. 
-    // Does not do logging, but I can't come up with a better name.
-    // This is logged at user space for performance reasons.
-    syscall(335, pid, start_time);
+    // process start time is logged at user space for performance reasons.
+    syscall(335, p->pid, &p->start_time);
 }
 
-void sys_log_process_end(pid_t pid, const struct timespec *start_time)
+static void sys_log_process_end(ProcessTimeRecord *p)
 {
-    // This function writes start_time and current time into kernel logs.
-    syscall(336, pid, start_time);
+    syscall(336, p->pid, &p->start_time);
 }
 
 static inline void read_single_entry(ProcessInfo *p)
