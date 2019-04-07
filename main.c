@@ -22,7 +22,8 @@ typedef enum ProcessStatus {
 
 typedef struct ProcessInfo {
     int ready_time;
-    int execution_time;
+    int time_needed; // Time needed to run the process.
+    int remaining_time; // Remaining time for the process; Use in PSJF to determine the process to be run.
     pid_t pid;
     ProcessStatus status;
     char *name; // Not an array; please allocate memory before writing.
