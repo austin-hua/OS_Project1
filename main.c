@@ -118,6 +118,7 @@ static inline void read_single_entry(ProcessInfo *p)
     scanf("%s", process_name);
     p->name = process_name;
     scanf("%d%d", &p->ready_time, &p->time_needed);
+    p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
 }
 
