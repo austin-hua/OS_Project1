@@ -22,7 +22,8 @@ typedef enum ProcessStatus {
 
 typedef struct ProcessInfo {
     int ready_time;
-    int execution_time;
+    int time_needed; // Same as execution time in the problem description i.e. time needed to run the process.
+    int remaining_time; // Remaining time for the process; Use in PSJF to determine the process to be run.
     pid_t pid;
     ProcessStatus status;
     char *name; // Not an array; please allocate memory before writing.
@@ -114,7 +115,7 @@ static inline void read_single_entry(ProcessInfo *p)
     char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
     scanf("%s", process_name);
     p->name = process_name;
-    scanf("%d%d", &p->ready_time, &p->execution_time);
+    scanf("%d%d", &p->ready_time, &p->time_needed);
     p->status = NOT_STARTED;
 }
 
