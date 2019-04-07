@@ -5,7 +5,8 @@ b06902101	b06902098	b05902099	b06902051	b05902132	b06902086
 
 Problem description: http://rswiki.csie.org/dokuwiki/courses:107_2:project_1
 
-Kernel files can be compiled along with kernel v5.0.3 - v5.0.6.  
+Kernel files can be compiled along with kernel v5.0.3 - v5.0.6.
+Kernel v5.0.6 could be downloaded at https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.0.6.tar.xz. 
 For other versions, use kernel/proj1.c directly, but other files may need to be merged manually.
 
 It's easy to compile the kernel, but the installation process may differ by your distribution.  
