@@ -38,7 +38,7 @@ typedef enum scheduleStrategy {
     FIFO, RR, SJF, PSJF
 } ScheduleStrategy;
 
-ScheduleStrategy setStrategy(char strat[]) {
+ScheduleStrategy str_to_strategy(char strat[]) {
     if(!strcmp(strat, "RR")) return RR;
     if(!strcmp(strat, "FIFO")) return FIFO;
     if(!strcmp(strat, "SJF")) return SJF;
@@ -66,29 +66,10 @@ static inline void run_single_unit(void) {
     for(i = 0; i < UNIT; i++) {}
 }
 
-/* for monopolizing cpu */
-static inline void set_my_priority(int priority)
-{
-    struct sched_param scheduler_param;
-    scheduler_param.sched_priority = priority;
-    int res = sched_setscheduler(0 /* this process */, SCHED_FIFO, &scheduler_param);
-    if (res != 0){
-        perror("Can't set scheduler!");
-        exit(res);
-    }
-}
-static inline void set_parent_priority(void)
-{
-    int priority = sched_get_priority_max(SCHED_FIFO);
-    set_my_priority(priority);
-}
-
-static inline void set_child_priority(void)
-{
-    int priority = sched_get_priority_max(SCHED_FIFO);
-    priority -= 1;
-    set_my_priority(priority);
-}
+/* for control kernel scheduler */
+static inline void set_my_priority(int priority);
+static inline void set_parent_priority(void);
+static inline void set_child_priority(void);
 
 pid_t my_fork()
 {
@@ -112,7 +93,30 @@ static void sys_log_process_end(ProcessTimeRecord *p)
     syscall(336, p->pid, &p->start_time);
 }
 
-static inline void read_single_entry(ProcessInfo *p)
+// for reading input
+static void read_process_info();
+
+// global variables
+
+ProcessInfo *all_process_info;
+int num_process; // number of processes 
+
+
+int main(void)
+{
+    char strat[4];
+    scanf("%s", strat);
+
+    ScheduleStrategy S = str_to_strategy(strat);
+
+    read_process_info(); 
+
+    /*for time retrieval when process begins execution*/
+    //timespec_get(&P[i].time_record, TIME_UTC);
+}
+
+/* for reading input */
+static void read_single_entry(ProcessInfo *p)
 {
     char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
     scanf("%s", process_name);
@@ -121,10 +125,6 @@ static inline void read_single_entry(ProcessInfo *p)
     p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
 }
-
-ProcessInfo *all_process_info;
-int num_process; // number of processes
-
 void read_process_info(void)
 { 
     scanf("%d", &num_process);
@@ -137,17 +137,28 @@ void read_process_info(void)
     return;
 }
 
-int main(void)
+/* for controlling kernel scheduling */
+static inline void set_my_priority(int priority)
 {
-    char strat[4];
-    scanf("%s", strat);
+    struct sched_param scheduler_param;
+    scheduler_param.sched_priority = priority;
+    int res = sched_setscheduler(0 /* this process */, SCHED_FIFO, &scheduler_param);
+    if (res != 0){
+        perror("Can't set scheduler!");
+        exit(res);
+    }
+}
+static inline void set_parent_priority(void)
+{
+    int priority = sched_get_priority_max(SCHED_FIFO);
+    set_my_priority(priority);
+}
 
-    ScheduleStrategy S = setStrategy(strat);
-
-    read_process_info();
-
-    /*for time retrieval when process begins execution*/
-    //timespec_get(&P[i].time_record, TIME_UTC);
+static inline void set_child_priority(void)
+{
+    int priority = sched_get_priority_max(SCHED_FIFO);
+    priority -= 1;
+    set_my_priority(priority);
 }
 
 /* The following functions are for testing */
