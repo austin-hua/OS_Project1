@@ -32,4 +32,4 @@ void fork_block_test(void);
 void sigalrmtest(int unused);
 void fork_signal_test(void);
 
-#include "main.c"
+#endif
