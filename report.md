@@ -12,4 +12,5 @@ Group members: B06902101, B06902098	B05902099	B06902051	B05902132	B06902086
 
 ### Contributions
 Naveno and Seth designed the SJF and PSJF scheduling algorithms
+Seth created the header file, added functions for debugging, input, and split the functions among several classes.
 Shally and Annjee designed the RR and FIFO scheduling algorithms
