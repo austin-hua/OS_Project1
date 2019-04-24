@@ -12,10 +12,9 @@
 #include <sched.h>
 
 #define PROCESS_NAME_MAX 100
-/* one unit, one million iterations */
-#define UNIT 1000000UL
+#define UNIT 1000000UL // one unit, one million iterations
 
-/* necessary data structures */
+/* data structures */
 typedef enum ProcessStatus { 
     NOT_STARTED, RUNNING, STOPPED 
 } ProcessStatus;
@@ -42,15 +41,6 @@ typedef enum scheduleStrategy {
     FIFO, RR, SJF, PSJF
 } ScheduleStrategy;
 
-ScheduleStrategy str_to_strategy(char strat[]) {
-    if(!strcmp(strat, "RR")) return RR;
-    if(!strcmp(strat, "FIFO")) return FIFO;
-    if(!strcmp(strat, "SJF")) return SJF;
-    if(!strcmp(strat, "PSJF")) return PSJF;
-    assert(0);
-}
-
-
 /* Scheduler functions: should be implemented by each scheduler */
 /* The scheduler will be informed that an event has happend via a function call. */
 /* Please use SIGSTOP and SIGCONT to perform a context switch. */ 
@@ -76,7 +66,6 @@ static  void switch_process(void); // for RR. Please use sigstop/sigcont.
 /* The event handler may want to know if there are any more jobs in the job pool. */
 static bool scheduler_empty(void);
 
-
 /* The loop that should be run by children process */
 static  void run_single_unit(void) {
     volatile unsigned long i;
@@ -98,7 +87,6 @@ pid_t my_fork()
 }
 
 /* systemcall wrapper */
-
 static void sys_log_process_start(ProcessTimeRecord *p)
 {
     // process start time is logged at user space for performance reasons.
@@ -110,11 +98,11 @@ static void sys_log_process_end(ProcessTimeRecord *p)
     syscall(336, p->pid, &p->start_time);
 }
 
-// for reading input
+/* IO fnts */
 static void read_process_info();
+ScheduleStrategy str_to_strategy(char strat[]);
 
-// global variables
-
+/* global variables */
 ProcessInfo *all_process_info;
 int num_process; // number of processes s
 ScheduleStrategy current_strategy;
@@ -127,7 +115,6 @@ struct timespec measure_time_unit(void);
 int timeunits_until_next_arrival(void);
 ProcessInfo *get_next_arrvied_process(void);
 bool arrival_queue_empty(void);
-
 
 int main(void)
 {
@@ -143,7 +130,15 @@ int main(void)
     
 }
 
-/* for reading input */
+/* IO fnts */
+ScheduleStrategy str_to_strategy(char strat[]) {
+    if(!strcmp(strat, "RR")) return RR;
+    if(!strcmp(strat, "FIFO")) return FIFO;
+    if(!strcmp(strat, "SJF")) return SJF;
+    if(!strcmp(strat, "PSJF")) return PSJF;
+    assert(0);
+}
+
 static void read_single_entry(ProcessInfo *p)
 {
     char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
@@ -153,13 +148,14 @@ static void read_single_entry(ProcessInfo *p)
     p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
 }
+
 void read_process_info(void)
 { 
     scanf("%d", &num_process);
 
     all_process_info =  (ProcessInfo *) malloc(num_process * sizeof(ProcessInfo));
     for(int i = 0; i < num_process; i++) {
-	read_single_entry(&all_process_info[i]);
+	    read_single_entry(&all_process_info[i]);
     }
 
     return;
@@ -176,6 +172,7 @@ static  void set_my_priority(int priority)
         exit(res);
     }
 }
+
 static  void set_parent_priority(void)
 {
     int priority = sched_get_priority_max(SCHED_FIFO);
@@ -276,6 +273,7 @@ void fork_block_test(void)
 void sigalrmtest(int unused)
 {
 }
+
 void fork_signal_test(void)
 {
     /* Tests if the parent can receive signal even when a child is running 
