@@ -83,16 +83,8 @@ pid_t my_fork()
 }
 
 /* systemcall wrapper */
-static void sys_log_process_start(ProcessTimeRecord *p)
-{
-    // process start time is logged at user space for performance reasons.
-    syscall(335, p->pid, &p->start_time);
-}
-
-static void sys_log_process_end(ProcessTimeRecord *p)
-{
-    syscall(336, p->pid, &p->start_time);
-}
+static void sys_log_process_start(ProcessTimeRecord *p);
+static void sys_log_process_end(ProcessTimeRecord *p);
 
 /* IO fnts */
 static void read_process_info();
@@ -111,6 +103,10 @@ struct timespec measure_time_unit(void);
 int timeunits_until_next_arrival(void);
 ProcessInfo *get_next_arrvied_process(void);
 bool arrival_queue_empty(void);
+
+void setup_timeslice_timer(struct timespec);
+void setup_arrival_timer(struct timespec);
+
 
 int main(void)
 {
@@ -144,6 +140,18 @@ static void read_single_entry(ProcessInfo *p)
     scanf("%d%d", &p->ready_time, &p->time_needed);
     p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
+}
+
+/* systemcall wrapper */
+static void sys_log_process_start(ProcessTimeRecord *p)
+{
+    // process start time is logged at user space for performance reasons.
+    syscall(335, p->pid, &p->start_time);
+}
+
+static void sys_log_process_end(ProcessTimeRecord *p)
+{
+    syscall(336, p->pid, &p->start_time);
 }
 
 void read_process_info(void)
