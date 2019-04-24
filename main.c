@@ -48,13 +48,6 @@ ScheduleStrategy setStrategy(char strat[]) {
     assert(0);
 }
 
-//for debugging
-void printTime(struct timespec ts) {
-    char buff[100];
-    strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    printf("%s.%09ld UTC\n", buff, ts.tv_nsec);
-}
-
 /* scheduler functions */
 static inline void pool_set_strategy(ScheduleStrategy); 
 static inline void pool_add_process(ProcessInfo *);
@@ -145,8 +138,9 @@ int main(void)
     scanf("%s", strat);
 
     ScheduleStrategy S = setStrategy(strat);
-
     read_process_info();
+    
+    schedule(S, all_process_info, num_process);
 
     /*for time retrieval when process begins execution*/
     //timespec_get(&P[i].time_record, TIME_UTC);
