@@ -20,6 +20,10 @@ typedef enum ProcessStatus {
     NOT_STARTED, RUNNING, STOPPED 
 } ProcessStatus;
 
+typedef enum AlarmType{
+    TIMESLICE_ENDED, PROCESS_ARRIVED
+} AlarmType;
+
 typedef struct ProcessTimeRecord { // for logging
     pid_t pid;
     struct timespec start_time;
@@ -136,8 +140,7 @@ int main(void)
 
     set_strategy(S);
 
-    /*for time retrieval when process begins execution*/
-    //timespec_get(&P[i].time_record, TIME_UTC);
+    
 }
 
 /* for reading input */
