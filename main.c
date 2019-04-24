@@ -99,6 +99,7 @@ ScheduleStrategy str_to_strategy(char strat[]);
 
 /* global variables */
 ProcessInfo *all_process_info;
+ProcessInfo *next_process;
 int num_process; // number of processes s
 ScheduleStrategy current_strategy;
 
@@ -169,8 +170,7 @@ void read_process_info(void)
     for(int i = 0; i < num_process; i++) {
 	    read_single_entry(&all_process_info[i]);
     }
-
-    return;
+    next_process = all_process_info;
 }
 
 /* for controlling kernel scheduling */
@@ -243,7 +243,8 @@ struct timespec timespec_subtract(struct timespec lhs, struct timespec rhs)
     return ret;
 }
 
-struct timespec measure_time_unit(void){
+struct timespec measure_time_unit(void)
+{
     struct timespec begin, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &begin);
     for(int i = 0; i < UNIT_MEASURE_REPEAT; i++){
@@ -254,9 +255,27 @@ struct timespec measure_time_unit(void){
     return timespec_divide(res, UNIT_MEASURE_REPEAT);
 }
 
-int timeunits_until_next_arrival(void);
-ProcessInfo *get_next_arrvied_process(void);
-bool arrival_queue_empty(void);
+int timeunits_until_next_arrival(void)
+{
+    assert(!arrival_queue_empty());
+    if (next_process == all_process_info){
+        return next_process->ready_time;
+    }
+    ProcessInfo *prev_process = next_process - 1;
+    return next_process->ready_time - prev_process->ready_time;
+}
+
+ProcessInfo *get_next_arrvied_process(void)
+{
+    ProcessInfo *ret = next_process;
+    next_process++;
+    return ret;
+}
+
+bool arrival_queue_empty(void)
+{
+    return next_process == all_process_info + num_process;
+}
 
 void fork_test(void)
 {
