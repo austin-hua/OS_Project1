@@ -1,5 +1,3 @@
-#include "scheduler.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -46,16 +44,41 @@ static inline void pool_run_current_process(void);
 static inline void pool_remove_current_process(void); // called when current process ends
 static inline void pool_switch_process(void); // for RR. Please use sigstop/sigcont.
 
+/* Scheduler functions: should be implemented by each scheduler */
+/* The scheduler will be informed that an event has happend via a function call. */
+/* Please use SIGSTOP and SIGCONT to perform a context switch. */ 
+
+/* Each scheduler should maintain a global data structure to record which processes are being managed.
+ * For example, an array of (ProcessInfo *),  a linked list of (ProcessInfo *), or a queue of (ProcessInfo *). 
+ * You should initialize your data structures when set_strategy() is called.*/
+static  void set_strategy(ScheduleStrategy);
+
+/* A call to add_process() means that a new process has arrived.
+ * Please use my_fork() to fork a new process, and record its pid in p->pid.
+ * Be mindful that you may have to perform a context switch, or send a SIGSTOP to the newly forked process. */
+static  void add_process(ProcessInfo *p); 
+
+/* A call to remove_process() signals that the current process has ended. 
+ * Please remove current process from your data structure, and context sitch to an appropriate child. */
+static  void remove_current_process(void); // called when current process ends 
+
+/* A call to switch_process() signals that the current time slice has ended, 
+    and a RR scheduler should perform a context switch. */
+static  void switch_process(void); // for RR. Please use sigstop/sigcont.
+
+/* The event handler may want to know if there are any more jobs in the job pool. */
+static bool scheduler_empty(void);
+
 /* The loop that should be run by children process */
-static inline void run_single_unit(void) {
+static  void run_single_unit(void) {
     volatile unsigned long i;
     for(i = 0; i < UNIT; i++) {}
 }
 
 /* for control kernel scheduler */
-static inline void set_my_priority(int priority);
-static inline void set_parent_priority(void);
-static inline void set_child_priority(void);
+static  void set_my_priority(int priority);
+static  void set_parent_priority(void);
+static  void set_child_priority(void);
 
 pid_t my_fork()
 {
@@ -84,7 +107,17 @@ ScheduleStrategy str_to_strategy(char strat[]);
 
 /* global variables */
 ProcessInfo *all_process_info;
-int num_process; // number of processes 
+int num_process; // number of processes s
+ScheduleStrategy current_strategy;
+
+// functions that are only useful to the main() or the event handler:
+struct timespec timespec_multiply(struct timespec, int);
+struct timespec timespec_devide(struct timespec, int);
+struct timespec measure_time_unit(void);
+
+int timeunits_until_next_arrival(void);
+ProcessInfo *get_next_arrvied_process(void);
+bool arrival_queue_empty(void);
 
 int main(void)
 {
@@ -94,6 +127,8 @@ int main(void)
     ScheduleStrategy S = str_to_strategy(strat);
 
     read_process_info(); 
+
+    set_strategy(S);
 
     /*for time retrieval when process begins execution*/
     //timespec_get(&P[i].time_record, TIME_UTC);
@@ -131,7 +166,7 @@ void read_process_info(void)
 }
 
 /* for controlling kernel scheduling */
-static inline void set_my_priority(int priority)
+static  void set_my_priority(int priority)
 {
     struct sched_param scheduler_param;
     scheduler_param.sched_priority = priority;
@@ -142,13 +177,13 @@ static inline void set_my_priority(int priority)
     }
 }
 
-static inline void set_parent_priority(void)
+static  void set_parent_priority(void)
 {
     int priority = sched_get_priority_max(SCHED_FIFO);
     set_my_priority(priority);
 }
 
-static inline void set_child_priority(void)
+static  void set_child_priority(void)
 {
     int priority = sched_get_priority_max(SCHED_FIFO);
     priority -= 1;
