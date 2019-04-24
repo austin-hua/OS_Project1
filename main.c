@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include <unistd.h>
 #include <sys/wait.h>
@@ -13,10 +14,12 @@
 
 #define PROCESS_NAME_MAX 100
 #define UNIT 1000000UL // one unit, one million iterations
+#define BILLION 1000000000L
+#define UNIT_MEASURE_REPEAT 1000
 
 /* data structures */
-typedef enum ProcessStatus { 
-    NOT_STARTED, RUNNING, STOPPED 
+typedef enum ProcessStatus {
+    NOT_STARTED, RUNNING, STOPPED
 } ProcessStatus;
 
 typedef enum AlarmType{
@@ -43,23 +46,23 @@ typedef enum scheduleStrategy {
 
 /* Scheduler functions: should be implemented by each scheduler */
 /* The scheduler will be informed that an event has happend via a function call. */
-/* Please use SIGSTOP and SIGCONT to perform a context switch. */ 
+/* Please use SIGSTOP and SIGCONT to perform a context switch. */
 
 /* Each scheduler should maintain a global data structure to record which processes are being managed.
- * For example, an array of (ProcessInfo *),  a linked list of (ProcessInfo *), or a queue of (ProcessInfo *). 
+ * For example, an array of (ProcessInfo *),  a linked list of (ProcessInfo *), or a queue of (ProcessInfo *).
  * You should initialize your data structures when set_strategy() is called.*/
 static  void set_strategy(ScheduleStrategy);
 
 /* A call to add_process() means that a new process has arrived.
  * Please use my_fork() to fork a new process, and record its pid in p->pid.
  * Be mindful that you may have to perform a context switch, or send a SIGSTOP to the newly forked process. */
-static  void add_process(ProcessInfo *p); 
+static  void add_process(ProcessInfo *p);
 
-/* A call to remove_process() signals that the current process has ended. 
+/* A call to remove_process() signals that the current process has ended.
  * Please remove current process from your data structure, and context sitch to an appropriate child. */
-static  void remove_current_process(void); // called when current process ends 
+static  void remove_current_process(void); // called when current process ends
 
-/* A call to switch_process() signals that the current time slice has ended, 
+/* A call to switch_process() signals that the current time slice has ended,
     and a RR scheduler should perform a context switch. */
 static  void switch_process(void); // for RR. Please use sigstop/sigcont.
 
@@ -101,7 +104,8 @@ ScheduleStrategy current_strategy;
 
 // functions that are only useful to the main() or the event handler:
 struct timespec timespec_multiply(struct timespec, int);
-struct timespec timespec_devide(struct timespec, int);
+struct timespec timespec_divide(struct timespec, int);
+struct timespec timespec_subtract(struct timespec, struct timespec);
 struct timespec measure_time_unit(void);
 
 int timeunits_until_next_arrival(void);
@@ -119,11 +123,11 @@ int main(void)
 
     ScheduleStrategy S = str_to_strategy(strat);
 
-    read_process_info(); 
+    read_process_info();
 
     set_strategy(S);
 
-    
+
 }
 
 /* IO fnts */
@@ -158,7 +162,7 @@ static void sys_log_process_end(ProcessTimeRecord *p)
 }
 
 void read_process_info(void)
-{ 
+{
     scanf("%d", &num_process);
 
     all_process_info =  (ProcessInfo *) malloc(num_process * sizeof(ProcessInfo));
@@ -212,6 +216,47 @@ bool parent_is_terminated(void)
     // The parent terminated so the child is adopted by init (whose pid is 1)
     return getppid() == 1;
 }
+
+struct timespec timespec_multiply(struct timespec timespec, int n)
+{
+    timespec.tv_sec *= n;
+    int64_t temp = timespec.tv_nsec * n; // 64_bit to prevent overflow
+    timespec.tv_sec += temp / BILLION;
+    timespec.tv_nsec = temp % BILLION;
+    return timespec;
+}
+
+struct timespec timespec_divide(struct timespec timespec , int n)
+{
+    int64_t total_nsec = timespec.tv_sec * BILLION + timespec.tv_nsec;
+    total_nsec /= n;
+    timespec.tv_sec = total_nsec / BILLION;
+    timespec.tv_nsec = total_nsec % BILLION;
+    return timespec;
+}
+
+struct timespec timespec_subtract(struct timespec lhs, struct timespec rhs)
+{
+    int64_t total_nsec = lhs.tv_nsec - rhs.tv_nsec;
+    total_nsec += (lhs.tv_sec - rhs.tv_sec) * BILLION;
+    struct timespec ret = {.tv_sec = total_nsec / BILLION, .tv_nsec = total_nsec % BILLION};
+    return ret;
+}
+
+struct timespec measure_time_unit(void){
+    struct timespec begin, end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &begin);
+    for(int i = 0; i < UNIT_MEASURE_REPEAT; i++){
+        run_single_unit();
+    }
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    struct timespec res = timespec_subtract(end, begin);
+    return timespec_divide(res, UNIT_MEASURE_REPEAT);
+}
+
+int timeunits_until_next_arrival(void);
+ProcessInfo *get_next_arrvied_process(void);
+bool arrival_queue_empty(void);
 
 void fork_test(void)
 {
@@ -284,7 +329,7 @@ void sigalrmtest(int unused)
 
 void fork_signal_test(void)
 {
-    /* Tests if the parent can receive signal even when a child is running 
+    /* Tests if the parent can receive signal even when a child is running
      * Expected behavior: The program freezes for 1 second, prints an "awoken by a signal" message,
      * then keeps freezing for a few seconds, then prints a message.
      */
