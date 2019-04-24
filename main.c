@@ -112,7 +112,17 @@ static void read_process_info();
 // global variables
 
 ProcessInfo *all_process_info;
-int num_process; // number of processes 
+int num_process; // number of processes s
+ScheduleStrategy current_strategy;
+
+// functions that are only useful to the main() or the event handler:
+struct timespec timespec_multiply(struct timespec, int);
+struct timespec timespec_devide(struct timespec, int);
+struct timespec measure_time_unit(void);
+
+int timeunits_until_next_arrival(void);
+ProcessInfo *get_next_arrvied_process(void);
+bool arrival_queue_empty(void);
 
 
 int main(void)
@@ -123,6 +133,8 @@ int main(void)
     ScheduleStrategy S = str_to_strategy(strat);
 
     read_process_info(); 
+
+    set_strategy(S);
 
     /*for time retrieval when process begins execution*/
     //timespec_get(&P[i].time_record, TIME_UTC);
