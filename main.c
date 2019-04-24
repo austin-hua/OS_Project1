@@ -102,8 +102,13 @@ ProcessInfo *all_process_info;
 ProcessInfo *next_process;
 int num_process; // number of processes s
 ScheduleStrategy current_strategy;
+/* qsort compare fnt */
+int sort_by_ready_time(const void *p1, const void *p2);
 
-// functions that are only useful to the main() or the event handler:
+/* Block all signals */
+void block_all_signals(void);
+
+/* functions that are only useful to the main() or the event handler */
 struct timespec timespec_multiply(struct timespec, int);
 struct timespec timespec_divide(struct timespec, int);
 struct timespec timespec_subtract(struct timespec, struct timespec);
@@ -116,6 +121,10 @@ bool arrival_queue_empty(void);
 void setup_timeslice_timer(struct timespec);
 void setup_arrival_timer(struct timespec);
 
+/* global variables */
+ProcessInfo *all_process_info;
+int num_process; // number of processes s
+ScheduleStrategy current_strategy;
 
 int main(void)
 {
@@ -129,6 +138,27 @@ int main(void)
     set_strategy(S);
 
 
+    read_process_info(); 
+    
+    /* sort the process by arrival time */
+    qsort(all_process_info, num_process, sizeof(ProcessInfo), sort_by_ready_time);
+    
+    /* block all signals */
+
+    set_strategy(S); 
+    while (true){
+        int ret = sigsuspend(); 
+            // arrival
+
+            // timeslice up 
+            switch_process();
+            continue;
+            // termed
+            remove_current_process();
+            if (arrival_queue_empty() && scheduler_empty()){
+                break;
+            }
+    }
 }
 
 /* IO fnts */
@@ -148,6 +178,23 @@ static void read_single_entry(ProcessInfo *p)
     scanf("%d%d", &p->ready_time, &p->time_needed);
     p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
+}
+
+/* qsort compare fnt */
+int sort_by_ready_time(const void *p1, const void *p2) {
+    ProcessInfo *p[2];
+    p[0] = (ProcessInfo *)p1;
+    p[1] = (ProcessInfo *)p2;
+    return (p[0]->ready_time > p[1]->ready_time);
+}
+
+/* Block all signals */
+void block_all_signals(void) {
+    sigset_t block_set;
+    sigemptyset(block_set);
+    sigaddset(block_set, SIGCHLD);
+    sigaddset(block_set, SIGALRM);
+    sigprocmask(SIG_BLOCK, block_set, NULL);
 }
 
 /* systemcall wrapper */
