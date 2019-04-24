@@ -1,3 +1,5 @@
+#include "scheduler.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -44,13 +46,6 @@ ScheduleStrategy str_to_strategy(char strat[]) {
     if(!strcmp(strat, "SJF")) return SJF;
     if(!strcmp(strat, "PSJF")) return PSJF;
     assert(0);
-}
-
-//for debugging
-void printTime(struct timespec ts) {
-    char buff[100];
-    strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    printf("%s.%09ld UTC\n", buff, ts.tv_nsec);
 }
 
 /* scheduler functions */
