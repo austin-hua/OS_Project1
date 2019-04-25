@@ -573,8 +573,9 @@ void sigalrmtest(int unused)
 void fork_signal_test(void)
 {
     /* Tests if the parent can receive signal even when a child is running
-     * Expected behavior: The program freezes for 1 second, prints an "awoken by a signal" message,
-     * then keeps freezing for a few seconds, then prints a message.
+     * Expected behavior: The program prints "The child begins running!",
+     * freezes for 1 second, prints an "awoken by a signal" message,
+     * then keeps freezing for a few seconds, and then prints a message.
      */
 
     set_parent_priority();
@@ -592,9 +593,10 @@ void fork_signal_test(void)
         printf("The parent is awoken by a signal!\n");
         wait(NULL);
     } else {
+        printf("The child begins running!\n");
         for(volatile unsigned long  i = 0; i < 500; i++){
             run_single_unit();
         }
-        printf("IF the parent has been awoken by a signal, then success, else error.\n");
+        printf("IF the parent has been awoken by a signal after the child began running, then success, else error.\n");
     }
 }
