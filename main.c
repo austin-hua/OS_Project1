@@ -68,20 +68,20 @@ volatile sig_atomic_t event_type;
 /* Each scheduler should maintain a global data structure to record which processes are being managed.
  * For example, an array of (ProcessInfo *),  a linked list of (ProcessInfo *), or a queue of (ProcessInfo *).
  * You should initialize your data structures when set_strategy() is called.*/
-static  void set_strategy(ScheduleStrategy);
+static void set_strategy(ScheduleStrategy);
 
 /* A call to add_process() means that a new process has arrived.
  * Please use my_fork() to fork a new process, and record its pid in p->pid.
  * Be mindful that you may have to perform a context switch, or send a SIGSTOP to the newly forked process. */
-static  void add_process(ProcessInfo *p);
+static void add_process(ProcessInfo *p);
 
 /* A call to remove_process() signals that the current process has ended.
  * Please remove current process from your data structure, and context sitch to an appropriate child. */
-static  void remove_current_process(void); // called when current process ends
+static void remove_current_process(void); // called when current process ends
 
 /* A call to switch_process() signals that the current time slice has ended,
     and a RR scheduler should perform a context switch. */
-static  void switch_process(void); // for RR. Please use sigstop/sigcont.
+static void switch_process(void); // for RR. Please use sigstop/sigcont.
 
 /* The event handler may want to know if there are any more jobs in the job pool. */
 static bool scheduler_empty(void);
@@ -146,7 +146,7 @@ struct timespec timespec_subtract(struct timespec, struct timespec);
 struct timespec measure_time_unit(void);
 
 int timeunits_until_next_arrival(void);
-ProcessInfo *get_next_arrived_process(void);
+ProcessInfo *get_arrived_process(void);
 bool arrival_queue_empty(void);
 
 void update_event_type(TimerInfo *ti)
@@ -239,10 +239,10 @@ bool remaining_is_zero(struct timespec remaining)
         return 0;
 }
 
-void update_arrival_remaining(TimerInfo *ti)
+void update_arrival_remaining(TimerInfo *ti, int time_units)
 {
     assert_nonnegetive_remaining(ti->arrival_remaining);
-    ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
+    ti->arrival_remaining = timespec_multiply(ti->time_unit, time_units);
 }
 
 void update_timeslice_remaining(TimerInfo *ti)
@@ -280,18 +280,16 @@ int main(void)
             if(event_type == TIMESLICE_OVER) {
                 switch_process();
                 update_timeslice_remaining(&timer_info);
-            }
-            else if(event_type == PROCESS_ARRIVAL) {
-                ProcessInfo *p;
-                while(timeunits_until_next_arrival() == 0) {
-                    p = get_next_arrived_process();
-                    add_process(p);
+            } else if(event_type == PROCESS_ARRIVAL) {
+                add_process(get_arrived_process());
+                int arrival_time;
+                while((arrival_time = timeunits_until_next_arrival()) == 0) {
+                    add_process(get_arrived_process());
                 }
-                update_arrival_remaining(&timer_info);
+                update_arrival_remaining(&timer_info, arrival_time);
             }
             set_timer(&timer_info);
-        }
-        else if(event_type == CHILD_TERMINATED) {
+        } else if(event_type == CHILD_TERMINATED) {
             remove_current_process();
         }
         if (arrival_queue_empty() && scheduler_empty()){
@@ -455,7 +453,7 @@ int timeunits_until_next_arrival(void)
     return next_process->ready_time - prev_process->ready_time;
 }
 
-ProcessInfo *get_next_arrived_process(void)
+ProcessInfo *get_arrived_process(void)
 {
     ProcessInfo *ret = next_process;
     next_process++;
