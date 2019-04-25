@@ -190,7 +190,7 @@ void create_timer_and_init_timespec(TimerInfo *ti)
 {
     // Create the timer
     struct sigevent sev;
-    
+
     sev.sigev_notify = SIGEV_SIGNAL;
     sev.sigev_signo = SIGALRM;
     if(timer_create(CLOCKID, &sev, &ti->timer_id) == -1) {
@@ -238,7 +238,7 @@ int main(void)
 
     read_process_info();
     qsort(all_process_info, num_process, sizeof(ProcessInfo), sort_by_ready_time);
-    
+
     /* Signal handling */
     sigset_t oldset = block_some_signals();
     costumize_signal_handlers();
@@ -249,7 +249,7 @@ int main(void)
     create_timer_and_init_timespec(&timer_info);
 
     while (true){
-        sigsuspend(&oldset); 
+        sigsuspend(&oldset);
         if(event_type == TIMER_EXPIRED) {
             check_timespec(&timer_info);
             if(timer_info.timeslice_over == 1) {
@@ -397,10 +397,13 @@ struct timespec timespec_divide(struct timespec timespec , int n)
 
 struct timespec timespec_subtract(struct timespec lhs, struct timespec rhs)
 {
-    int64_t total_nsec = lhs.tv_nsec - rhs.tv_nsec;
-    total_nsec += (lhs.tv_sec - rhs.tv_sec) * BILLION;
-    struct timespec ret = {.tv_sec = total_nsec / BILLION, .tv_nsec = total_nsec % BILLION};
-    return ret;
+    lhs.tv_sec -= rhs.tv_sec;
+    lhs.tv_nsec -= rhs.tv_nsec;
+    if (lhs.tv_nsec < 0){
+        lhs.tv_sec -= 1;
+        lhs.tv_nsec += BILLION;
+    }
+    return lhs;
 }
 
 struct timespec measure_time_unit(void)
