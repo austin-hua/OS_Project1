@@ -1,49 +1,97 @@
 #ifndef __SCHEDULER__
 #define __SCHEDULER__
 
-#include "schedulingAlgorithms.c"
+#include <sched.h>
+#include <stdbool.h>
 
-//This is just the busy work
-//add and remove prototypes as needed
-//(delete anything that will stay only in main.c)
+#define ITERATION_PER_TIMEUNIT 1000000UL // one unit, one million iterations
 
-ScheduleStrategy setStrategy(char strat[]);
+/* Data structures */
+typedef enum ProcessStatus {
+    NOT_STARTED, RUNNING, STOPPED
+} ProcessStatus;
 
-/* scheduler functions */
-static inline void pool_set_strategy(ScheduleStrategy); 
-static inline void pool_add_process(ProcessInfo *);
-static inline void pool_run_current_process(void);
-static inline void pool_remove_current_process(void);
-static inline void pool_switch_process(void);
+typedef enum EventType{
+    TIMER_EXPIRED, CHILD_TERMINATED, TIMESLICE_OVER, PROCESS_ARRIVAL
+} EventType;
 
-/*scheduling algorithms*/
-static inline void round_robin(ProcessInfo *p);
-static inline void first_in_first_out(ProcessInfo *p);
-static inline void shortest_job_first(ProcessInfo *p);
-static inline void preemptive_shortest_job_first(ProcessInfo *p);
+typedef struct ProcessTimeRecord { // For logging
+    pid_t pid;
+    struct timespec start_time;
+} ProcessTimeRecord;
 
-/*process functions*/
-static inline void set_my_priority(int priority);
-static inline void set_parent_priority(void);
-static inline void set_child_priority(void);
+typedef struct ProcessInfo {
+    int ready_time;
+    int time_needed; // Same as execution time in the problem description i.e. time needed to run the process.
+    int remaining_time; // Remaining time for the process; Use in PSJF to determine the process to be run.
+    pid_t pid;
+    ProcessStatus status;
+    char *name; // Not an array; please allocate memory before writing.
+} ProcessInfo;
+
+typedef enum scheduleStrategy {
+    FIFO, RR, SJF, PSJF
+} ScheduleStrategy;
+
+/* Global variables */
+extern ScheduleStrategy current_strategy;
+
+/* Scheduler functions: should be implemented by each scheduler */
+/* The scheduler will be informed that an event has happend via a function call. */
+
+/* Each scheduler should maintain a global data structure to record which processes are being managed.
+ * For example, an array of (ProcessInfo *),  a linked list of (ProcessInfo *), or a queue of (ProcessInfo *).
+ * You should initialize your data structures when set_strategy() is called.*/
+void set_strategy_FIFO();
+void set_strategy_RR();
+void set_strategy_SJF();
+void set_strategy_PSJF();
+
+/* A call to add_process() means that a new process has arrived.
+ * Please use my_fork() to fork a new process, and record its pid in p->pid, and update your data structure.
+ * Its possible that multiple new processes arrive simultaneously, so don't perform a context switch. */
+void add_process_FIFO(ProcessInfo *);
+void add_process_RR(ProcessInfo *);
+void add_process_SJF(ProcessInfo *);
+void add_process_PSJF(ProcessInfo *);
+
+/* A call to remove_process() signals that the current process has ended.
+ * Please remove current process from your data structure, but don't perform a context switch. */
+void remove_current_process_FIFO(void);
+void remove_current_process_RR(void);
+void remove_current_process_SJF(void);
+void remove_current_process_PSJF(void);
+/* A call to timeslice_over() signals that the current time slice has ended,
+ * a RR scheduler should update its data structure. */
+void timeslice_over_RR(void);
+
+/* The event handler will notify when to context switch.
+ * Perform a context switch when, and only when, this function is called.
+ * Send SIGSTOP and SIGCONT to appropriate children to perform a context switch. */
+
+void context_switch_FIFO(void);
+void context_switch_RR(void);
+void context_switch_SJF(void);
+void context_switch_PSFJ(void);
+
+/* The event handler may want to know if there are any more jobs in the job pool. */
+bool scheduler_empty_FIFO(void);
+bool scheduler_empty_RR(void);
+bool scheduler_empty_SJF(void);
+bool scheduler_empty_PSFJ(void);
+
+/* The loop that should be run by children process */
+static inline void run_single_unit(void) {
+    volatile unsigned long i;
+    for(i = 0; i < ITERATION_PER_TIMEUNIT; i++) {}
+}
+
+/* Systemcall wrapper:
+ * After forking sys_log_process_start() should be called to record the start time in a ProcessTimeReocrd.
+ * After a child terminiates, sys_log_process_end() should be called to write a message to dmesg. */
+void sys_log_process_start(ProcessTimeRecord *p);
+void sys_log_process_end(ProcessTimeRecord *p);
+
 pid_t my_fork();
-static void sys_log_process_start(ProcessTimeRecord *p);
-static void sys_log_process_end(ProcessTimeRecord *p);
-static inline void read_single_entry(ProcessInfo *p);
-
-/*unused functions*/
-/*debugging functions*/
-void printTime(struct timespec ts);
-
-/*other functions*/
-static inline void run_single_unit(void);
-void read_process_info(void);
-void priority_test(void);
-bool parent_is_terminated(void);
-void fork_test(void);
-void fork_priority_test(void);
-void fork_block_test(void);
-void sigalrmtest(int unused);
-void fork_signal_test(void);
 
 #endif
