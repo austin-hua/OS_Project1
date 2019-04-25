@@ -327,6 +327,8 @@ int main(void)
         }
         if (arrival_queue_empty() && scheduler_empty()){
             break;
+        } else {
+            context_switch();
         }
     }
 }
@@ -355,7 +357,7 @@ static int sort_by_ready_time(const void *p1, const void *p2) {
     ProcessInfo *p[2];
     p[0] = (ProcessInfo *)p1;
     p[1] = (ProcessInfo *)p2;
-    return (p[0]->ready_time > p[1]->ready_time);
+    return (p[0]->ready_time - p[1]->ready_time);
 }
 
 /* Block some signals */
