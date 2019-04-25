@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <unistd.h>
 #include <sys/wait.h>
@@ -48,8 +49,6 @@ typedef enum scheduleStrategy {
 
 typedef struct TimerInfo {
     timer_t timer_id;
-    int process_arrival;
-    int timeslice_over;
     struct timespec time_unit;
     struct timespec arrival_remaining;
     struct timespec timeslice_remaining;
@@ -152,12 +151,10 @@ bool arrival_queue_empty(void);
 
 void init_arrival_remaining(TimerInfo *ti)
 {
-    ti->process_arrival = 0;
     ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
 }
 void init_timeslice_remaining(TimerInfo *ti)
 {
-    ti->timeslice_over = 0;
     if(current_strategy != RR) {
         return;
     }
@@ -178,22 +175,19 @@ struct timespec shorter_remaining(TimerInfo *ti)
 void set_timer(TimerInfo *ti) {
     struct timespec min = shorter_remaining(ti);
     struct itimerspec its;
-    its.it_interval = its.it_value = min;
-    int ret = timer_settime(ti->timer_id, 0, &its, NULL);
-    if(ret == -1) {
+    its.it_interval.tv_sec = its.it_interval.tv_nsec = 0;
+    its.it_value = min;
+    int err = timer_settime(ti->timer_id, 0, &its, NULL);
+    if(err == -1) {
         printf("timer_settime error!!!\n");
-        exit(ret);
+        exit(err);
     }
 }
 
 void create_timer_and_init_timespec(TimerInfo *ti)
 {
     // Create the timer
-    struct sigevent sev;
-
-    sev.sigev_notify = SIGEV_SIGNAL;
-    sev.sigev_signo = SIGALRM;
-    if(timer_create(CLOCKID, &sev, &ti->timer_id) == -1) {
+    if(timer_create(CLOCKID, NULL, &ti->timer_id) == -1) {
         printf("timer_create error!!!\n");
         exit(0);
     }
@@ -206,15 +200,34 @@ void create_timer_and_init_timespec(TimerInfo *ti)
     set_timer(ti);
 }
 
-void check_timespec(TimerInfo *ti)
+void assert_nonnegetive_remaining(struct timespec remaining)
 {
-    if(is_zero(ti->timeslice_remaining))
-        ti->timeslice_over = 1;
-    else if(is_zero(ti->arrival_remaining))
-        ti->process_arrival = 1;
-    else {
-        printf("check_timespec fnt error!!!\n");
-        exit(0);
+    assert(remaining.tv_sec >= 0 && remaining.tv_nsec >= 0);
+}
+
+bool remaining_is_zero(struct timespec remaining)
+{
+    if(remaining.tv_sec == 0 && remaining.tv_nsec == 0)
+        return 1;
+    else
+        return 0;
+}
+
+void update_arrival_remaining(struct timespec min, TimerInfo *ti)
+{
+    ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, min);
+    assert_nonnegetive_remaining(ti->arrival_remaining);
+    if(remaining_is_zero(ti->arrival_remaining)) {
+        ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
+    }
+}
+
+void update_timeslice_remaining(struct timespec min, TimerInfo *ti)
+{
+    ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, min);
+    assert_nonnegetive_remaining(ti->timeslice_remaining);
+    if(remaining_is_zero(ti->timeslice_remaining)) {
+        ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
     }
 }
 
@@ -227,6 +240,24 @@ void update_timespec_and_set_timer(TimerInfo *ti)
 
     // Set the timer
     set_timer(ti);
+}
+
+bool timeslice_ended(TimerInfo *ti)
+{
+    struct timespec min = shorter_remaining(ti);
+    if(ti->timeslice_remaining.tv_sec == min.tv_sec && ti->timeslice_remaining.tv_nsec == min.tv_nsec)
+        return 1;
+    else
+        return 0;
+}
+
+bool process_arrival(TimerInfo *ti)
+{
+    struct timespec min = shorter_remaining(ti);
+    if(ti->arrival_remaining.tv_sec == min.tv_sec && ti->arrival_remaining.tv_nsec == min.tv_nsec)
+        return 1;
+    else
+        return 0;
 }
 
 int main(void)
@@ -251,17 +282,16 @@ int main(void)
     while (true){
         sigsuspend(&oldset);
         if(event_type == TIMER_EXPIRED) {
-            check_timespec(&timer_info);
-            if(timer_info.timeslice_over == 1) {
+            if(timeslice_ended(&timer_info)) {
                 switch_process();
             }
-            else if(timer_info.process_arrival == 1) {
+            else if(process_arrival(&timer_info)) {
+                ProcessInfo *p;
                 while(timeunits_until_next_arrival() == 0) {
-                    ProcessInfo *p = get_next_arrived_process();
+                    p = get_next_arrived_process();
                     add_process(p);
                 }
             }
-            // update(?)
             update_timespec_and_set_timer(&timer_info);
         }
         else if(event_type == CHILD_TERMINATED) {
