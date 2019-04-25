@@ -26,7 +26,7 @@ typedef enum ProcessStatus {
 } ProcessStatus;
 
 typedef enum EventType{
-    TIMER_EXPIRED, CHILD_TERMINATED
+    TIMER_EXPIRED, CHILD_TERMINATED, TIMESLICE_OVER, PROCESS_ARRIVAL
 } EventType;
 
 typedef struct ProcessTimeRecord { // For logging
@@ -149,6 +149,18 @@ int timeunits_until_next_arrival(void);
 ProcessInfo *get_next_arrived_process(void);
 bool arrival_queue_empty(void);
 
+void update_event_type(TimerInfo *ti)
+{
+    if(current_strategy != RR) {
+        event_type = PROCESS_ARRIVAL;
+        return;
+    }
+    struct timespec dif = timespec_subtract(ti->timeslice_remaining, ti->arrival_remaining);
+    if(dif.tv_sec >= 0 && dif.tv_nsec >= 0)
+        event_type = PROCESS_ARRIVAL;
+    else
+        event_type = TIMESLICE_OVER;
+}
 void init_arrival_remaining(TimerInfo *ti)
 {
     ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
@@ -160,23 +172,37 @@ void init_timeslice_remaining(TimerInfo *ti)
     }
     ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
 }
-struct timespec shorter_remaining(TimerInfo *ti)
+EventType why_timer_expired_and_subtract_both_remaining(TimerInfo *ti)
 {
     if(current_strategy == RR) {
         struct timespec dif = timespec_subtract(ti->arrival_remaining,ti->timeslice_remaining);
-        if(dif.tv_sec >= 0 && dif.tv_nsec >= 0)
-            return ti->timeslice_remaining;
-        else
-            return ti->arrival_remaining;
-    } else {
-        return ti->arrival_remaining;
+        if(dif.tv_sec >= 0 && dif.tv_nsec >= 0) {
+            ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, ti->timeslice_remaining);
+            ti->timeslice_remaining.tv_sec = ti->timeslice_remaining.tv_nsec = 0;
+            return TIMESLICE_OVER;
+        }
+        else {
+            ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, ti->arrival_remaining);
+            ti->arrival_remaining.tv_sec = ti->arrival_remaining.tv_nsec = 0;
+            return PROCESS_ARRIVAL;
+        }
+    }
+    else {
+        ti->arrival_remaining.tv_sec = ti->arrival_remaining.tv_nsec = 0;
+        return PROCESS_ARRIVAL;
     }
 }
-void set_timer(TimerInfo *ti) {
-    struct timespec min = shorter_remaining(ti);
+void set_timer(TimerInfo *ti)
+{
     struct itimerspec its;
     its.it_interval.tv_sec = its.it_interval.tv_nsec = 0;
-    its.it_value = min;
+    update_event_type(ti);
+    if(event_type == TIMESLICE_OVER) {
+        its.it_value = ti->timeslice_remaining;
+    }
+    else if(event_type == PROCESS_ARRIVAL) {
+        its.it_value = ti->arrival_remaining;
+    }
     int err = timer_settime(ti->timer_id, 0, &its, NULL);
     if(err == -1) {
         printf("timer_settime error!!!\n");
@@ -213,51 +239,19 @@ bool remaining_is_zero(struct timespec remaining)
         return 0;
 }
 
-void update_arrival_remaining(struct timespec min, TimerInfo *ti)
+void update_arrival_remaining(TimerInfo *ti)
 {
-    ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, min);
     assert_nonnegetive_remaining(ti->arrival_remaining);
-    if(remaining_is_zero(ti->arrival_remaining)) {
-        ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
-    }
+    ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
 }
 
-void update_timeslice_remaining(struct timespec min, TimerInfo *ti)
+void update_timeslice_remaining(TimerInfo *ti)
 {
-    ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, min);
+    if(current_strategy != RR) {
+        return;
+    }
     assert_nonnegetive_remaining(ti->timeslice_remaining);
-    if(remaining_is_zero(ti->timeslice_remaining)) {
-        ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
-    }
-}
-
-void update_timespec_and_set_timer(TimerInfo *ti)
-{
-    // Update timespec
-    struct timespec min = shorter_remaining(ti);
-    update_arrival_remaining(min,ti);
-    update_timeslice_remaining(min,ti);
-
-    // Set the timer
-    set_timer(ti);
-}
-
-bool timeslice_ended(TimerInfo *ti)
-{
-    struct timespec min = shorter_remaining(ti);
-    if(ti->timeslice_remaining.tv_sec == min.tv_sec && ti->timeslice_remaining.tv_nsec == min.tv_nsec)
-        return 1;
-    else
-        return 0;
-}
-
-bool process_arrival(TimerInfo *ti)
-{
-    struct timespec min = shorter_remaining(ti);
-    if(ti->arrival_remaining.tv_sec == min.tv_sec && ti->arrival_remaining.tv_nsec == min.tv_nsec)
-        return 1;
-    else
-        return 0;
+    ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
 }
 
 int main(void)
@@ -282,17 +276,20 @@ int main(void)
     while (true){
         sigsuspend(&oldset);
         if(event_type == TIMER_EXPIRED) {
-            if(timeslice_ended(&timer_info)) {
+            event_type = why_timer_expired_and_subtract_both_remaining(&timer_info);
+            if(event_type == TIMESLICE_OVER) {
                 switch_process();
+                update_timeslice_remaining(&timer_info);
             }
-            else if(process_arrival(&timer_info)) {
+            else if(event_type == PROCESS_ARRIVAL) {
                 ProcessInfo *p;
                 while(timeunits_until_next_arrival() == 0) {
                     p = get_next_arrived_process();
                     add_process(p);
                 }
+                update_arrival_remaining(&timer_info);
             }
-            update_timespec_and_set_timer(&timer_info);
+            set_timer(&timer_info);
         }
         else if(event_type == CHILD_TERMINATED) {
             remove_current_process();
