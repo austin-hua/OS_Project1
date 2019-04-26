@@ -35,6 +35,7 @@ typedef enum scheduleStrategy {
 
 /* Global variables */
 extern ScheduleStrategy current_strategy;
+extern int num_process;
 
 /* Scheduler functions: should be implemented by each scheduler */
 /* The scheduler will be informed that an event has happend via a function call. */

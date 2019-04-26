@@ -29,11 +29,11 @@ typedef struct TimerInfo {
 
 /* Global variables */
 ScheduleStrategy current_strategy;
+int num_process; // Number of processes s
 
 /* private static variables */
 static ProcessInfo *all_process_info;
 static ProcessInfo *next_process;
-static int num_process; // Number of processes s
 static volatile sig_atomic_t event_type;
 
 /* functions for interaction with scheduler */
