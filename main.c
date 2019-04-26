@@ -33,7 +33,8 @@ int num_process; // Number of processes s
 
 /* private static variables */
 static ProcessInfo *all_process_info;
-static ProcessInfo *next_process;
+static ProcessInfo **arrival_queue;
+static ProcessInfo **arrival_ptr;
 static volatile sig_atomic_t event_type;
 
 /* functions for interaction with scheduler */
@@ -178,6 +179,7 @@ static struct timespec timespec_divide(struct timespec, int);
 static struct timespec timespec_subtract(struct timespec, struct timespec);
 static struct timespec measure_time_unit(void);
 
+static void arrival_queue_init(void);
 static int timeunits_until_next_arrival(void);
 static ProcessInfo *get_arrived_process(void);
 static bool arrival_queue_empty(void);
@@ -295,7 +297,7 @@ int main(void)
     set_strategy(current_strategy);
 
     read_process_info();
-    qsort(all_process_info, num_process, sizeof(ProcessInfo), sort_by_ready_time);
+    arrival_queue_init();
 
     /* Signal handling */
     sigset_t oldset = block_some_signals();
@@ -331,6 +333,9 @@ int main(void)
             context_switch();
         }
     }
+    for(int i = 0; i < num_process; i++){
+        printf("%s %d\n", all_process_info[i].name, all_process_info[i].pid);
+    }
 }
 
 /* IO fnts */
@@ -352,13 +357,6 @@ static void read_single_entry(ProcessInfo *p)
     p->status = NOT_STARTED;
 }
 
-/* Qsort compare fnt */
-static int sort_by_ready_time(const void *p1, const void *p2) {
-    ProcessInfo *p[2];
-    p[0] = (ProcessInfo *)p1;
-    p[1] = (ProcessInfo *)p2;
-    return (p[0]->ready_time - p[1]->ready_time);
-}
 
 /* Block some signals */
 static sigset_t block_some_signals(void) {
@@ -390,7 +388,6 @@ static void read_process_info(void)
     for(int i = 0; i < num_process; i++) {
 	    read_single_entry(&all_process_info[i]);
     }
-    next_process = all_process_info;
 }
 
 /* For controlling kernel scheduling */
@@ -465,26 +462,44 @@ static struct timespec measure_time_unit(void)
     return timespec_divide(res, UNIT_MEASURE_REPEAT);
 }
 
+static int processinfo_ptr_cmp(const void * lhs, const void * rhs)
+{
+    const ProcessInfo * const * lhs_p = lhs;
+    const ProcessInfo * const * rhs_p = rhs;
+    return  (**lhs_p).ready_time - (**rhs_p).ready_time;
+}
+
+static void arrival_queue_init(void)
+{
+    arrival_queue = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process);
+    for(int i = 0; i < num_process; i++){
+        arrival_queue[i] = all_process_info + i;
+    }
+    qsort(arrival_queue, num_process, sizeof(ProcessInfo *),
+            processinfo_ptr_cmp);
+    arrival_ptr = arrival_queue;
+}
+
 static int timeunits_until_next_arrival(void)
 {
     assert(!arrival_queue_empty());
-    if (next_process == all_process_info){
-        return next_process->ready_time;
+    if (arrival_ptr == &arrival_queue[0]){
+        return (*arrival_ptr)->ready_time;
     }
-    ProcessInfo *prev_process = next_process - 1;
-    return next_process->ready_time - prev_process->ready_time;
+    ProcessInfo **prev_process = arrival_ptr - 1;
+    return (*arrival_ptr)->ready_time - (*prev_process)->ready_time;
 }
 
 static ProcessInfo *get_arrived_process(void)
 {
-    ProcessInfo *ret = next_process;
-    next_process++;
+    ProcessInfo *ret = *arrival_ptr;
+    arrival_ptr++;
     return ret;
 }
 
 static bool arrival_queue_empty(void)
 {
-    return next_process == all_process_info + num_process;
+    return arrival_ptr == arrival_queue + num_process;
 }
 
 /* The following functions are for testing */
