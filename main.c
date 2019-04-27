@@ -149,9 +149,6 @@ pid_t my_fork()
 static void read_process_info();
 static ScheduleStrategy str_to_strategy(char strat[]);
 
-/* Qsort compare fnt */
-static int sort_by_ready_time(const void *p1, const void *p2);
-
 /* Block some signals */
 static sigset_t block_some_signals(void);
 
@@ -352,7 +349,7 @@ static void read_single_entry(ProcessInfo *p)
     char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
     scanf("%s", process_name);
     p->name = process_name;
-    scanf("%d%d", &p->ready_time, &p->time_needed);
+    scanf("%d%d", &p->arrival_time, &p->time_needed);
     p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
 }
@@ -466,7 +463,7 @@ static int processinfo_ptr_cmp(const void * lhs, const void * rhs)
 {
     const ProcessInfo * const * lhs_p = lhs;
     const ProcessInfo * const * rhs_p = rhs;
-    return  (**lhs_p).ready_time - (**rhs_p).ready_time;
+    return  (**lhs_p).arrival_time - (**rhs_p).arrival_time;
 }
 
 static void arrival_queue_init(void)
@@ -484,10 +481,10 @@ static int timeunits_until_next_arrival(void)
 {
     assert(!arrival_queue_empty());
     if (arrival_ptr == &arrival_queue[0]){
-        return (*arrival_ptr)->ready_time;
+        return (*arrival_ptr)->arrival_time;
     }
     ProcessInfo **prev_process = arrival_ptr - 1;
-    return (*arrival_ptr)->ready_time - (*prev_process)->ready_time;
+    return (*arrival_ptr)->arrival_time - (*prev_process)->arrival_time;
 }
 
 static ProcessInfo *get_arrived_process(void)
