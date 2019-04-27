@@ -61,7 +61,7 @@ void set_strategy(ScheduleStrategy s){
 
 void add_process(ProcessInfo *p){
     p->pid = fork_a_child(p->time_needed);
-    kill(p->pid, SIGSTOP);
+    suspend_process(p->pid);
     p->status = STOPPED;
     switch (current_strategy){
         case FIFO:
@@ -341,7 +341,7 @@ int main(void)
                 update_timeslice_remaining(&timer_info);
             } else if(event_type == PROCESS_ARRIVAL) {
                 add_process(get_arrived_process());
-                int arrival_time;
+                int arrival_time = 0;
                 while(!arrival_queue_empty() && (arrival_time = timeunits_until_next_arrival()) == 0) {
                     add_process(get_arrived_process());
                 }
@@ -414,16 +414,12 @@ static void read_process_info(void)
     }
 }
 
+
+extern inline void set_priority(pid_t pid, int priority);
 /* For controlling kernel scheduling */
 static void set_my_priority(int priority)
 {
-    struct sched_param scheduler_param;
-    scheduler_param.sched_priority = priority;
-    int res = sched_setscheduler(0 /* this process */, SCHED_FIFO, &scheduler_param);
-    if (res != 0){
-        perror("Can't set scheduler!");
-        exit(res);
-    }
+    set_priority(getpid(), priority);
 }
 
 static void set_parent_priority(void)

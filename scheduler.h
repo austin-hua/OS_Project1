@@ -3,6 +3,8 @@
 
 #include <sched.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define ITERATION_PER_TIMEUNIT 1000000UL // one unit, one million iterations
 
@@ -90,6 +92,26 @@ typedef struct Heap {
     ProcessInfo **pq;
     int heap_size;
 } Heap;
+
+inline void set_priority(pid_t pid, int priority)
+{
+    struct sched_param kernel_sched_param;
+    kernel_sched_param.sched_priority = priority;
+    int res = sched_setscheduler(pid, SCHED_FIFO, &kernel_sched_param);
+    if (res != 0){
+        perror("Can't set scheduler!");
+        exit(res);
+    }
+}
+
+static inline void suspend_process(pid_t pid)
+{
+    set_priority(pid, sched_get_priority_min(SCHED_FIFO));
+}
+static inline void resume_process(pid_t pid)
+{
+    set_priority(pid, sched_get_priority_max(SCHED_FIFO) - 1);
+}
 
 void heap_insert(Heap *,ProcessInfo *p);
 void heap_init(Heap* p);

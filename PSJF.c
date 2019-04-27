@@ -34,10 +34,10 @@ void context_switch_PSJF(void) {
 
     if (!heap_empty(&pq) && active_process != heap_top(&pq)){
         if (active_process != NULL){
-            kill(active_process->pid, SIGSTOP);
+            suspend_process(active_process->pid);
         }
         active_process = heap_top(&pq);
-        kill(active_process->pid, SIGCONT);
+        resume_process(active_process->pid);
     }
     last_context_switch_time = current_time;
 }

@@ -25,7 +25,7 @@ void context_switch_SJF(void) {
      }
      active_process = heap_top(&inactive_heap);
      heap_pop(&inactive_heap);
-     kill(active_process->pid, SIGCONT);
+     resume_process(active_process->pid);
 }
 
 bool scheduler_empty_SJF(void) {

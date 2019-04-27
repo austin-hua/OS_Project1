@@ -62,10 +62,10 @@ void timeslice_over_RR(void) {
 
 void context_switch_RR(void) {
     if (previous_active_id >= 0){
-        kill(pq[previous_active_id]->pid, SIGSTOP);
+        suspend_process(pq[previous_active_id]->pid);
     }
     if (current_process_id >= 0){
-        kill(pq[current_process_id]->pid, SIGCONT);
+        resume_process(pq[current_process_id]->pid);
     }
 }
 
