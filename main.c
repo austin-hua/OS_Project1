@@ -335,6 +335,7 @@ int main(void)
                 ProcessInfo *arrived = get_arrived_process();
                 arrived->pid = fork_a_child(arrived->time_needed);
                 kill(arrived->pid, SIGSTOP);
+                arrived->status = STOPPED;
                 add_process(get_arrived_process());
                 int arrival_time;
                 while((arrival_time = timeunits_until_next_arrival()) == 0) {
