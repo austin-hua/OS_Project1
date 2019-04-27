@@ -5,7 +5,7 @@
 #include <signal.h>
 
 static Heap inactive_heap;
-static ProcessInfo *activeProcess = NULL;
+static ProcessInfo *active_process = NULL;
 
 void add_process_SJF(ProcessInfo *new_process) {
      heap_insert(&inactive_heap, new_process);

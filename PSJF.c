@@ -6,7 +6,7 @@
 #include <signal.h>
 
 static Heap pq;
-static ProcessInfo *activeProcess = NULL;
+static ProcessInfo *active_process = NULL;
 static int last_context_switch_time = 0;
 static int current_time = 0;
 
@@ -31,14 +31,16 @@ void context_switch_PSJF(void) {
     if(active_process != NULL){
         active_process->remaining_time -= (current_time - last_context_switch_time);
     }
-    if (active_process != heap_top(&pq){
-        kill(active_process->pid, SIGSTOP);
+    if (heap_size(&pq) != 0 && active_process != heap_top(&pq)){
+        if (active_process != NULL){
+            kill(active_process->pid, SIGSTOP);
+        }
         active_process = heap_top(&pq);
-        kill(active_process, SIGCONT);
+        kill(active_process->pid, SIGCONT);
     }
     last_context_switch_time = current_time;
 }
 
 bool scheduler_empty_PSJF(void) {
-     return heap_size(&inactive_heap) == 0 && active_process == NULL;
+     return heap_size(&pq) == 0 && active_process == NULL;
 }
