@@ -23,7 +23,6 @@ void remove_curr_process_PSJF(void) {
     assert(active_process == heap_top(&pq));
     int time_passed = active_process->remaining_time;
     current_time += time_passed;
-    heap_pop(&pq);
     active_process = NULL;
 }
 
@@ -31,6 +30,7 @@ void context_switch_PSJF(void) {
     if(active_process != NULL){
         active_process->remaining_time -= (current_time - last_context_switch_time);
     }
+
     if (heap_size(&pq) != 0 && active_process != heap_top(&pq)){
         if (active_process != NULL){
             kill(active_process->pid, SIGSTOP);
