@@ -110,7 +110,7 @@ void context_switch(void)
             context_switch_SJF();
             break;
         case PSJF:
-            context_switch_PSFJ();
+            context_switch_PSJF();
             break;
     }
 }
@@ -125,7 +125,7 @@ static bool scheduler_empty(void)
         case SJF:
             return scheduler_empty_SJF();
         case PSJF:
-            return scheduler_empty_PSFJ();
+            return scheduler_empty_PSJF();
     }
 }
 
