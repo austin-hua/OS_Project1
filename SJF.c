@@ -1,33 +1,88 @@
-#include <stdlib.h>
 #include "scheduler.h"
 #include <stdlib.h>
 
 ProcessInfo **pq;
-int curr_num_process;
-int active_process;
+int heap_size;
+ProcessInfo *activeProcess = NULL;
 
-void set_strategy_SJF() {
+void heap_init()
+{
      pq = (ProcessInfo**)malloc(sizeof(ProcessInfo*) * num_process);
-     curr_num_process = 0;
+     heap_size = 0;
 }
 
-static ProcessInfo** PQ;
-static ProcessInfo** tail;
+void swap(int lhs, int rhs) {
+     ProcessInfo *temp = pq[lhs];
+     pq[lhs] = pq[rhs];
+     pq[rhs] = temp;
+}
+
+void upheap(int childInd) {
+     int parentInd = (childInd - 1) / 2;
+     while (parentInd != 0 && pq[parentInd]->remaining_time < pq[childInd]->remaining_time) {
+          swap(parentInd, childInd);    
+          childInd = parentInd;
+          parentInd = (childInd - 1) / 2;     
+     }
+}
+
+void heap_insert(ProcessInfo *p)
+{
+     int childInd = heap_size;
+     heap_size++;
+     uphead(heap_size-1);
+}
+
+ProcessInfo *heap_top(){
+     return pq[0];
+}
+int min_child(parentInd)
+{
+     // assuming left child id < heapSize
+     int child1Ind = parentInd * 2;
+     int child2Ind = parentInd * 2 + 1;
+     if (child2Ind >= heapSize){
+          return child1Ind;
+     }
+     if (pq[child1Ind]->remaining_time > pq[child2Ind]->remaining_time){
+         return child2ind;
+     }
+     return child1Ind;
+}
+
+void downheap(int parentInd) {
+     while(parentInd * 2 < heap_size) {
+         int minChildInd = min_child(parentInd);
+         if (pq[parentInd]->remaining_time <= pq[minChildInd]->remaining_time){
+             break;
+         }
+         swap(parentInd, minChildInd);
+         parentInd = minChildInd;
+     }
+}
+
+void heap_pop() {
+     swap(heap_size, 0);
+     heap_size--;
+     downheap(0);
+}
+
+int heap_size() {
+     return heap_size;
+}
 
 void set_strategy_SJF() {
-    PQ = (ProcessInfo **)malloc(num_process * sizeof(ProcessInfo *));
-    tail = PQ;
+     heap_init();
 }
 
 void add_process_SJF(ProcessInfo *new_process) {
     pq[cur_num_process] = new_process;
-    cur_num_process++;
+    curr_num_process++;
 }
 
 void remove_curr_process_SJF(void) {
      pq[curr_num_process-1] = NULL;
      curr_num_process--;
-     sys_log_process_end();
 }
 
 int smallest_process(void) {
@@ -41,7 +96,7 @@ int smallest_process(void) {
 
 void run_process(int ind) {
      while(pq[ind]->remaining_time) {
-
+          
      }
 }
 
