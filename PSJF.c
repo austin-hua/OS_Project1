@@ -19,11 +19,12 @@ void set_strategy_PSJF() {
     heap_init(&pq);
 }
 
-void remove_curr_process_PSJF(void) {
+void remove_current_process_PSJF(void) {
     assert(active_process == heap_top(&pq));
     int time_passed = active_process->remaining_time;
     current_time += time_passed;
     active_process = NULL;
+    heap_pop(&pq);
 }
 
 void context_switch_PSJF(void) {
