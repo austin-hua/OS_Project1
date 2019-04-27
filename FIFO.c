@@ -1,52 +1,28 @@
 #include "scheduler.h"
+#include <signal.h>
+#include <stdlib.h>
 
-// Please read comments in scheduler.h to see what functions to be implemented.
+static ProcessInfo **pq;
+static int active_process_id = -1;
+static int prev_process_id = -1;
+static int count_process = 0;
 
-// implement 1 side of FIFO. writes first, then reads 
+void set_strategy_FIFO() {
+	
+}
 
-#include <stdio.h> 
-#include <string.h> 
-#include <fcntl.h> 
-#include <sys/stat.h> 
-#include <sys/types.h> 
-#include <unistd.h> 
+void add_process_FIFO(ProcessInfo *) {
+	pq = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process);
+}
 
-int main() 
-{ 
-	int fd; 
+void remove_current_process_RR(void) {
+	
+}
 
-	// FIFO file path 
-	char * myfifo = "/tmp/myfifo"; 
+void context_switch_FIFO(void) {
+	
+}
 
-	// Creating the named file(FIFO) 
-	// mkfifo(<pathname>, <permission>) 
-	mkfifo(myfifo, 0666); 
-
-	char arr1[80], arr2[80]; 
-	while (1) 
-	{ 
-		// Open FIFO for write only 
-		fd = open(myfifo, O_WRONLY); 
-
-		// Take an input arr2ing from user. 
-		// 80 is maximum length 
-		fgets(arr2, 80, stdin); 
-
-		// Write the input arr2ing on FIFO 
-		// and close it 
-		write(fd, arr2, strlen(arr2)+1); 
-		close(fd); 
-
-		// Open FIFO for Read only 
-		fd = open(myfifo, O_RDONLY); 
-
-		// Read from FIFO 
-		read(fd, arr1, sizeof(arr1)); 
-
-		// Print the read message 
-		printf("User2: %s\n", arr1); 
-		close(fd); 
-	} 
-	return 0; 
-} 
-
+bool scheduler_empty_FIFO(void) {
+	
+}
