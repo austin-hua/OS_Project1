@@ -11,10 +11,12 @@ void set_strategy_SJF() {
 }
 
 void add_process_SJF(ProcessInfo *new_process) {
+    pq[cur_num_process] = new_process;
     cur_num_process++;
 }
 
 void remove_curr_process_SJF(void) {
+     pq[curr_num_process-1] = NULL;
      curr_num_process--;
      sys_log_process_end();
 }
@@ -44,5 +46,3 @@ void context_switch_SJF(void) {
 bool scheduler_empty_SJF(void) {
      return curr_num_process == 0;
 }
-
-// Please read comments in scheduler.h to see what functions to be implemented.
