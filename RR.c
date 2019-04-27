@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include "scheduler.h"
@@ -19,18 +21,18 @@ static int advance(int n) {
 }
 
 void set_strategy_RR(void) {
-    pq = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process;    
+    pq = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process);
 }
 
-                           
+
 void add_process_RR(ProcessInfo *p) {
     if (process_count == 0){
         assert(previous_active_id < 0);
         current_process_id = 0;
         pq[current_process_id] = p;
     } else {
-        memmove(pq + current_process_id + 1, 
-                pq + current_process_id, 
+        memmove(pq + current_process_id + 1,
+                pq + current_process_id,
                 process_count - current_process_id);
         pq[current_process_id] = p;
         current_process_id++;
@@ -67,6 +69,6 @@ void context_switch_RR(void) {
     }
 }
 
-void scheduler_empty_RR(void) {
+bool scheduler_empty_RR(void) {
     return process_count == 0 && current_process_id < 0;
 }
