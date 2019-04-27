@@ -129,8 +129,6 @@ static bool scheduler_empty(void)
     }
 }
 
-pid_t my_fork();
-
 /* For control kernel scheduler */
 static void set_my_priority(int priority);
 static void set_parent_priority(void);
