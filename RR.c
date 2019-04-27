@@ -33,7 +33,7 @@ void add_process_RR(ProcessInfo *p) {
     } else {
         memmove(pq + current_process_id + 1,
                 pq + current_process_id,
-                process_count - current_process_id);
+                sizeof(ProcessInfo *) * (process_count - current_process_id) );
         pq[current_process_id] = p;
         current_process_id++;
     }
@@ -44,7 +44,7 @@ void remove_current_process_RR(void) {
     if (current_process_id + 1 != process_count){ // so pq + current_process_id + 1 is a valid memory location
         memmove(pq + current_process_id ,
                 pq + current_process_id + 1,
-                process_count - (current_process_id + 1));
+                sizeof(ProcessInfo *) * (process_count - (current_process_id + 1)));
     }
     previous_active_id = -1;
     process_count--;
