@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "scheduler.h"
 #include <stdlib.h>
 
@@ -8,6 +9,14 @@ int active_process;
 void set_strategy_SJF() {
      pq = (ProcessInfo**)malloc(sizeof(ProcessInfo*) * num_process);
      curr_num_process = 0;
+}
+
+static ProcessInfo** PQ;
+static ProcessInfo** tail;
+
+void set_strategy_SJF() {
+    PQ = (ProcessInfo **)malloc(num_process * sizeof(ProcessInfo *));
+    tail = PQ;
 }
 
 void add_process_SJF(ProcessInfo *new_process) {
@@ -32,7 +41,7 @@ int smallest_process(void) {
 
 void run_process(int ind) {
      while(pq[ind]->remaining_time) {
-          
+
      }
 }
 
