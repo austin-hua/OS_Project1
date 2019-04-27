@@ -10,6 +10,7 @@ void set_strategy_FIFO() {
 }
 
 void add_process_FIFO(ProcessInfo *p) {
+    kill(p->pid, SIGCONT);
     count_process++;
 }
 
