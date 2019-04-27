@@ -86,5 +86,14 @@ static inline void run_single_unit(void) {
     for(i = 0; i < ITERATION_PER_TIMEUNIT; i++) {}
 }
 
+typedef struct Heap {
+    ProcessInfo **pq;
+    int heap_size;
+} Heap;
 
+void heap_insert(Heap *,ProcessInfo *p);
+void heap_init(Heap* p);
+ProcessInfo *heap_top(Heap *);
+void heap_pop(Heap *);
+int heap_size(Heap *);
 #endif
