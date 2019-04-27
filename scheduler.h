@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <signal.h>
+
 #define ITERATION_PER_TIMEUNIT 1000000UL // one unit, one million iterations
 
 /* Data structures */
@@ -107,10 +109,12 @@ inline void set_priority(pid_t pid, int priority)
 static inline void suspend_process(pid_t pid)
 {
     set_priority(pid, sched_get_priority_min(SCHED_FIFO));
+    // kill(pid, SIGSTOP);
 }
 static inline void resume_process(pid_t pid)
 {
-    set_priority(pid, sched_get_priority_max(SCHED_FIFO) - 1);
+    set_priority(pid, sched_get_priority_max(SCHED_FIFO)-1);
+    // kill(pid, SIGCONT);
 }
 
 void heap_insert(Heap *,ProcessInfo *p);

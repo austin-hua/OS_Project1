@@ -62,7 +62,6 @@ void set_strategy(ScheduleStrategy s){
 void add_process(ProcessInfo *p){
     p->pid = fork_a_child(p->time_needed);
     suspend_process(p->pid);
-    p->status = STOPPED;
     switch (current_strategy){
         case FIFO:
             add_process_FIFO(p);
@@ -157,7 +156,7 @@ pid_t fork_a_child(int child_run_time)
     pid_t child_pid = my_fork();
     if (child_pid != 0){
         return child_pid;
-    }
+    } 
     ProcessTimeRecord time_record;
     time_record.pid = getpid();
     sys_log_process_start(&time_record);
@@ -315,6 +314,7 @@ static void update_timeslice_remaining(TimerInfo *ti)
 
 int main(void)
 {
+    set_parent_priority();
     char strat[PROCESS_NAME_MAX];
     scanf("%s", strat);
     current_strategy = str_to_strategy(strat);
@@ -349,6 +349,7 @@ int main(void)
             }
             set_timer(&timer_info);
         } else if(event_type == CHILD_TERMINATED) {
+            wait(NULL);
             remove_current_process();
         }
         if (arrival_queue_empty() && scheduler_empty()){
