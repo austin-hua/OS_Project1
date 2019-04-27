@@ -16,7 +16,7 @@
 #define BILLION 1000000000L
 #define UNIT_MEASURE_REPEAT 1000
 #define RR_TIMES_OF_UNIT 500
-#define CLOCKID CLOCK_MONOTONIC_RAW
+#define CLOCKID CLOCK_MONOTONIC
 
 #include "scheduler.h"
 
@@ -36,6 +36,9 @@ static ProcessInfo *all_process_info;
 static ProcessInfo **arrival_queue;
 static ProcessInfo **arrival_ptr;
 static volatile sig_atomic_t event_type;
+
+/* fork a child */
+static pid_t fork_a_child(int);
 
 /* functions for interaction with scheduler */
 
@@ -57,6 +60,9 @@ void set_strategy(ScheduleStrategy s){
 }
 
 void add_process(ProcessInfo *p){
+    p->pid = fork_a_child(p->time_needed);
+    kill(p->pid, SIGSTOP);
+    p->status = STOPPED;
     switch (current_strategy){
         case FIFO:
             add_process_FIFO(p);
@@ -213,6 +219,10 @@ static void update_event_type(TimerInfo *ti)
 static void init_arrival_remaining(TimerInfo *ti)
 {
     ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
+    if(timeunits_until_next_arrival() == 0){
+        // The first signal may arrive immediately, in which case someone needs to send a signal.
+        raise(SIGALRM);
+    }
 }
 static void init_timeslice_remaining(TimerInfo *ti)
 {
@@ -330,13 +340,9 @@ int main(void)
                 timeslice_over();
                 update_timeslice_remaining(&timer_info);
             } else if(event_type == PROCESS_ARRIVAL) {
-                ProcessInfo *arrived = get_arrived_process();
-                arrived->pid = fork_a_child(arrived->time_needed);
-                kill(arrived->pid, SIGSTOP);
-                arrived->status = STOPPED;
                 add_process(get_arrived_process());
                 int arrival_time;
-                while((arrival_time = timeunits_until_next_arrival()) == 0) {
+                while(!arrival_queue_empty() && (arrival_time = timeunits_until_next_arrival()) == 0) {
                     add_process(get_arrived_process());
                 }
                 update_arrival_remaining(&timer_info, arrival_time);
