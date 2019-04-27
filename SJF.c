@@ -15,7 +15,7 @@ void set_strategy_SJF() {
      heap_init(&inactive_heap);
 }
 
-void remove_curr_process_SJF(void) {
+void remove_current_process_SJF(void) {
      active_process = NULL;
 }
 

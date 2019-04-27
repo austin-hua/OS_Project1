@@ -72,13 +72,13 @@ void timeslice_over_RR(void);
 void context_switch_FIFO(void);
 void context_switch_RR(void);
 void context_switch_SJF(void);
-void context_switch_PSFJ(void);
+void context_switch_PSJF(void);
 
 /* The event handler may want to know if there are any more jobs in the job pool. */
 bool scheduler_empty_FIFO(void);
 bool scheduler_empty_RR(void);
 bool scheduler_empty_SJF(void);
-bool scheduler_empty_PSFJ(void);
+bool scheduler_empty_PSJF(void);
 
 /* The loop that should be run by children process */
 static inline void run_single_unit(void) {
@@ -96,4 +96,5 @@ void heap_init(Heap* p);
 ProcessInfo *heap_top(Heap *);
 void heap_pop(Heap *);
 int heap_size(Heap *);
+bool heap_empty(Heap *);
 #endif

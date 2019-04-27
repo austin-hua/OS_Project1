@@ -31,7 +31,7 @@ void context_switch_PSJF(void) {
         active_process->remaining_time -= (current_time - last_context_switch_time);
     }
 
-    if (heap_size(&pq) != 0 && active_process != heap_top(&pq)){
+    if (!heap_empty(&pq) && active_process != heap_top(&pq)){
         if (active_process != NULL){
             kill(active_process->pid, SIGSTOP);
         }
@@ -42,5 +42,5 @@ void context_switch_PSJF(void) {
 }
 
 bool scheduler_empty_PSJF(void) {
-     return heap_size(&pq) == 0 && active_process == NULL;
+     return active_process == NULL && heap_empty(&pq);
 }
