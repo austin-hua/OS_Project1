@@ -48,9 +48,7 @@ void set_strategy_RR();
 void set_strategy_SJF();
 void set_strategy_PSJF();
 
-/* A call to add_process() means that a new process has arrived.
- * Please use my_fork() to fork a new process, record its pid in p->pid, and update your data structure.
- * After forking, send SIGSTOP to the child immediately.
+/* A call to add_process() means that a new process has arrived.  Please update your data structure.
  * Its possible that multiple new processes arrive simultaneously, so don't perform a context switch. */
 void add_process_FIFO(ProcessInfo *);
 void add_process_RR(ProcessInfo *);
@@ -88,13 +86,5 @@ static inline void run_single_unit(void) {
     for(i = 0; i < ITERATION_PER_TIMEUNIT; i++) {}
 }
 
-/* Systemcall wrapper:
- * After forking sys_log_process_start() should be called to record the start time in a ProcessTimeReocrd.
- * After a child terminiates, sys_log_process_end() should be called to write a message to dmesg. */
-void sys_log_process_start(ProcessTimeRecord *p);
-void sys_log_process_end(ProcessTimeRecord *p);
-
-/* Use this function to spawn a new process instead of using fork(). */
-pid_t my_fork();
 
 #endif

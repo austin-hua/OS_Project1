@@ -145,6 +145,25 @@ pid_t my_fork()
     return fork_res;
 }
 
+void sys_log_process_start(ProcessTimeRecord *);
+void sys_log_process_end(ProcessTimeRecord *);
+
+pid_t fork_a_child(int child_run_time)
+{
+    pid_t child_pid = my_fork();
+    if (child_pid != 0){
+        return child_pid;
+    }
+    ProcessTimeRecord time_record;
+    time_record.pid = getpid();
+    sys_log_process_start(&time_record);
+    for(int i = 0; i < child_run_time; i++){
+        run_single_unit();
+    }
+    sys_log_process_end(&time_record);
+    exit(0);
+}
+
 /* IO fnts */
 static void read_process_info();
 static ScheduleStrategy str_to_strategy(char strat[]);
@@ -313,6 +332,9 @@ int main(void)
                 timeslice_over();
                 update_timeslice_remaining(&timer_info);
             } else if(event_type == PROCESS_ARRIVAL) {
+                ProcessInfo *arrived = get_arrived_process();
+                arrived->pid = fork_a_child(arrived->time_needed);
+                kill(arrived->pid, SIGSTOP);
                 add_process(get_arrived_process());
                 int arrival_time;
                 while((arrival_time = timeunits_until_next_arrival()) == 0) {
@@ -512,7 +534,6 @@ static void priority_test(void)
     }
 }
 
-
 void fork_test(void)
 {
     /* Tests if the children runs only if the parent has done all its stuff.
@@ -612,3 +633,4 @@ void fork_signal_test(void)
         printf("IF the parent has been awoken by a signal after the child began running, then success, else error.\n");
     }
 }
+
