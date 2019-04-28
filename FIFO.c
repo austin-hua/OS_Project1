@@ -1,9 +1,5 @@
 #include "scheduler.h"
-#include <signal.h>
-#include <stdlib.h>
 
-static int active_process_id = -1;
-static int prev_process_id = -1;
 static int count_process = 0;
 
 void set_strategy_FIFO(int unused) {
