@@ -6,6 +6,7 @@ void heap_init(Heap* h) {
      h->heap_size = 0;
 }
 
+
 static void heap_swap(Heap *h, int lhs, int rhs) {
      ProcessInfo *temp = h->pq[lhs];
      h->pq[lhs] = h->pq[rhs];
@@ -14,7 +15,7 @@ static void heap_swap(Heap *h, int lhs, int rhs) {
 
 static void upheap(Heap *h, int childInd) {
      int parentInd = (childInd - 1) / 2;
-     while (parentInd != 0 && h->pq[parentInd]->remaining_time < h->pq[childInd]->remaining_time) {
+     while (parentInd >= 0 && h->pq[parentInd]->remaining_time > h->pq[childInd]->remaining_time) {
           heap_swap(h, parentInd, childInd);
           childInd = parentInd;
           parentInd = (childInd - 1) / 2;
