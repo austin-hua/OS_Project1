@@ -263,7 +263,7 @@ static void set_timer(TimerInfo *ti)
     }
     int err = timer_settime(ti->timer_id, 0, &its, NULL);
     if(err == -1) {
-        printf("timer_settime error!!!\n");
+        perror("timer_settime error!!!");
         exit(err);
     }
 }
@@ -272,7 +272,7 @@ static void create_timer_and_init_timespec(TimerInfo *ti)
 {
     // Create the timer
     if(timer_create(CLOCKID, NULL, &ti->timer_id) == -1) {
-        printf("timer_create error!!!\n");
+        perror("timer_create error!!!");
         exit(0);
     }
 
