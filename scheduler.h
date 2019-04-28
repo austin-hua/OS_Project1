@@ -65,13 +65,14 @@ void remove_current_process_FIFO(void);
 void remove_current_process_RR(void);
 void remove_current_process_SJF(void);
 void remove_current_process_PSJF(void);
+
 /* A call to timeslice_over() signals that the current time slice has ended,
  * a RR scheduler should update its data structure. */
 void timeslice_over_RR(void);
 
 /* The event handler will notify when to context switch.
  * Perform a context switch when, and only when, this function is called.
- * Send SIGSTOP and SIGCONT to appropriate children to perform a context switch. */
+ * Use suspend_process and resume_process to perform a context switch. */
 
 void context_switch_FIFO(void);
 void context_switch_RR(void);
