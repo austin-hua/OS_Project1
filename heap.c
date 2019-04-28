@@ -18,12 +18,12 @@ static bool heap_element_lt(Heap *h, int lhsIdx, int rhsIdx)
 
 static int lchild(int parentIdx)
 {
-    return parentIdx * 2;
+    return parentIdx * 2 + 1;
 }
 
 static int rchild(int parentIdx)
 {
-    return parentIdx * 2 + 1;
+    return parentIdx * 2 + 2;
 }
 
 static int parent(int childIdx)
