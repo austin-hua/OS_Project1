@@ -132,6 +132,7 @@ static bool scheduler_empty(void)
         case PSJF:
             return scheduler_empty_PSJF();
     }
+    assert(0); //impossible to arrive here
 }
 
 /* For control kernel scheduler */
@@ -203,18 +204,16 @@ static int timeunits_until_next_arrival(void);
 static ProcessInfo *get_arrived_process(void);
 static bool arrival_queue_empty(void);
 
-static void update_event_type(TimerInfo *ti)
+static struct timespec *min_timespecp(struct timespec *lhs, struct timespec *rhs)
 {
-    if(current_strategy != RR) {
-        event_type = PROCESS_ARRIVAL;
-        return;
+    struct timespec diff = timespec_subtract(*lhs, *rhs);
+    if (diff.tv_sec < 0 || diff.tv_nsec < 0){
+        return lhs;
+    } else {
+        return rhs;
     }
-    struct timespec dif = timespec_subtract(ti->timeslice_remaining, ti->arrival_remaining);
-    if(dif.tv_sec >= 0 && dif.tv_nsec >= 0)
-        event_type = PROCESS_ARRIVAL;
-    else
-        event_type = TIMESLICE_OVER;
 }
+
 static void init_arrival_remaining(TimerInfo *ti)
 {
     ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
@@ -230,37 +229,62 @@ static void init_timeslice_remaining(TimerInfo *ti)
     }
     ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
 }
-static EventType why_timer_expired_and_subtract_both_remaining(TimerInfo *ti)
+
+static EventType get_expire_reason(TimerInfo *ti)
 {
-    if(current_strategy == RR) {
-        struct timespec dif = timespec_subtract(ti->arrival_remaining,ti->timeslice_remaining);
-        if(dif.tv_sec >= 0 && dif.tv_nsec >= 0) {
-            ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, ti->timeslice_remaining);
-            ti->timeslice_remaining.tv_sec = ti->timeslice_remaining.tv_nsec = 0;
-            return TIMESLICE_OVER;
-        }
-        else {
-            ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, ti->arrival_remaining);
-            ti->arrival_remaining.tv_sec = ti->arrival_remaining.tv_nsec = 0;
-            return PROCESS_ARRIVAL;
-        }
-    }
-    else {
-        ti->arrival_remaining.tv_sec = ti->arrival_remaining.tv_nsec = 0;
+    if(current_strategy != RR){
         return PROCESS_ARRIVAL;
     }
+    struct timespec *min = 
+        min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
+    if (min == &ti->arrival_remaining){
+        return PROCESS_ARRIVAL;
+    } else {
+        return TIMESLICE_OVER;
+    }
 }
+
+static void subtract_time_passed(TimerInfo *ti)
+{
+    /* If the timer expired, than time specified by the lesser of the two timespecs in ti 
+     * has passed.  As we are simulating two timers with only one timer, we have to subtract
+     * the larger timespec with the lesser of the timespecs.
+     */
+    if (current_strategy == RR) {
+        if (arrival_queue_empty()){
+            ti->timeslice_remaining.tv_sec = ti->timeslice_remaining.tv_nsec = 0;
+        } else {
+            struct timespec *min = 
+                min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
+            if (min == &ti->arrival_remaining){
+                ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, *min);
+                min->tv_sec = min->tv_nsec = 0;
+            } else {
+                ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, *min);
+                min->tv_sec = min->tv_nsec = 0;
+            }
+        }
+    } else {
+        // In non-RR strategy, there is only one timer. No subtraction is needed.
+        ti->arrival_remaining.tv_sec = ti->arrival_remaining.tv_nsec = 0;
+    }
+}
+
 static void set_timer(TimerInfo *ti)
 {
     struct itimerspec its;
     its.it_interval.tv_sec = its.it_interval.tv_nsec = 0;
-    update_event_type(ti);
-    if(event_type == TIMESLICE_OVER) {
-        its.it_value = ti->timeslice_remaining;
-    }
-    else if(event_type == PROCESS_ARRIVAL) {
+    if (current_strategy != RR){
         its.it_value = ti->arrival_remaining;
-    }
+    } else if (arrival_queue_empty()){
+        its.it_value = ti->timeslice_remaining;
+    } else { 
+        // To simulate two timers with only one timer, the timer should
+        // send an alarm when the lesser of the timespec has passed.
+        struct timespec *min = 
+            min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
+        its.it_value = *min;
+    } 
     int err = timer_settime(ti->timer_id, 0, &its, NULL);
     if(err == -1) {
         perror("timer_settime error!!!");
@@ -289,12 +313,12 @@ static void assert_nonnegetive_remaining(struct timespec remaining)
     assert(remaining.tv_sec >= 0 && remaining.tv_nsec >= 0);
 }
 
-static bool remaining_is_zero(struct timespec remaining)
+static bool timspec_is_zero(struct timespec remaining)
 {
     if(remaining.tv_sec == 0 && remaining.tv_nsec == 0)
-        return 1;
+        return true;
     else
-        return 0;
+        return false;
 }
 
 static void update_arrival_remaining(TimerInfo *ti, int time_units)
@@ -335,7 +359,8 @@ int main(void)
     while (true){
         sigsuspend(&oldset);
         if(event_type == TIMER_EXPIRED) {
-            event_type = why_timer_expired_and_subtract_both_remaining(&timer_info);
+            event_type = get_expire_reason(&timer_info);
+            subtract_time_passed(&timer_info);
             if(event_type == TIMESLICE_OVER) {
                 timeslice_over();
                 update_timeslice_remaining(&timer_info);

@@ -101,7 +101,9 @@ inline void set_priority(pid_t pid, int priority)
     kernel_sched_param.sched_priority = priority;
     int res = sched_setscheduler(pid, SCHED_FIFO, &kernel_sched_param);
     if (res != 0){
-        perror("Can't set scheduler!");
+        char errmsg[100];
+	sprintf(errmsg, "Can't set scheduler on pid %d!", pid);
+        perror(errmsg);
         exit(res);
     }
 }
