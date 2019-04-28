@@ -1,11 +1,35 @@
 #include <stdlib.h>
 #include "scheduler.h"
 
-void heap_init(Heap* h) {
-     h->pq = (ProcessInfo**)malloc(sizeof(ProcessInfo*) * num_process);
+void heap_init(Heap* h, int max_size) {
+     h->pq = (ProcessInfo**)malloc(sizeof(ProcessInfo*) * max_size);
      h->heap_size = 0;
 }
 
+static bool heap_element_lt(Heap *h, int lhsIdx, int rhsIdx)
+{
+    const ProcessInfo *lhs = h->pq[lhsIdx];
+    const ProcessInfo *rhs = h->pq[rhsIdx];
+    if (lhs->remaining_time == rhs->remaining_time){
+        return lhs->pid < rhs->pid;
+    }
+    return lhs->remaining_time < rhs->remaining_time;
+}
+
+static int lchild(int parentIdx)
+{
+    return parentIdx * 2;
+}
+
+static int rchild(int parentIdx)
+{
+    return parentIdx * 2 + 1;
+}
+
+static int parent(int childIdx)
+{
+    return (childIdx - 1)/2;
+}
 
 static void heap_swap(Heap *h, int lhs, int rhs) {
      ProcessInfo *temp = h->pq[lhs];
@@ -13,47 +37,40 @@ static void heap_swap(Heap *h, int lhs, int rhs) {
      h->pq[rhs] = temp;
 }
 
-static void upheap(Heap *h, int childInd) {
-     int parentInd = (childInd - 1) / 2;
-     while (parentInd >= 0 && h->pq[parentInd]->remaining_time > h->pq[childInd]->remaining_time) {
-          heap_swap(h, parentInd, childInd);
-          childInd = parentInd;
-          parentInd = (childInd - 1) / 2;
+static void upheap(Heap *h, int childIdx) {
+     int parentIdx = (childIdx - 1) / 2;
+     while (childIdx > 0 && heap_element_lt(h, childIdx, parentIdx)) {
+          heap_swap(h, parentIdx, childIdx);
+          childIdx = parentIdx;
+          parentIdx = (childIdx - 1) / 2;
      }
 }
 
 void heap_insert(Heap *h, ProcessInfo *p) {
-     int childInd = h->heap_size;
-     h->pq[childInd] = p;
+     int childIdx = h->heap_size;
+     h->pq[childIdx] = p;
      h->heap_size++;
-     upheap(h,childInd);
+     upheap(h,childIdx);
 }
 
 ProcessInfo *heap_top(Heap *h) {
      return h->pq[0];
 }
 
-static int min_child(Heap *h, int parentInd) {
-     // assuming left child id < heapSize
-     int child1Ind = parentInd * 2;
-     int child2Ind = parentInd * 2 + 1;
-     if (child2Ind >= h->heap_size){
-          return child1Ind;
-     }
-     if (h->pq[child1Ind]->remaining_time > h->pq[child2Ind]->remaining_time){
-         return child2Ind;
-     }
-     return child1Ind;
-}
-
-static void downheap(Heap *h, int parentInd) {
-     while(parentInd * 2 < h->heap_size) {
-         int minChildInd = min_child(h,parentInd);
-         if (h->pq[parentInd]->remaining_time <= h->pq[minChildInd]->remaining_time){
-             break;
+static void downheap(Heap *h, int parentIdx) {
+     while(lchild(parentIdx) < h->heap_size) {
+         int minIdx = parentIdx;
+         if (heap_element_lt(h, lchild(parentIdx), minIdx)){ 
+             minIdx = lchild(parentIdx);
          }
-         heap_swap(h, parentInd, minChildInd);
-         parentInd = minChildInd;
+         if (rchild(parentIdx) < h->heap_size && heap_element_lt(h, rchild(parentIdx), minIdx)){
+             minIdx = rchild(parentIdx);
+         }
+         if (parentIdx == minIdx){
+             break;
+         } 
+         heap_swap(h, parentIdx, minIdx);
+         parentIdx = minIdx;
      }
 }
 

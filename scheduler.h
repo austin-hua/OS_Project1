@@ -39,7 +39,6 @@ typedef enum scheduleStrategy {
 
 /* Global variables */
 extern ScheduleStrategy current_strategy;
-extern int num_process;
 
 /* Scheduler functions: should be implemented by each scheduler */
 /* The scheduler will be informed that an event has happend via a function call. */
@@ -47,10 +46,10 @@ extern int num_process;
 /* Each scheduler should maintain a global data structure to record which processes are being managed.
  * For example, an array of (ProcessInfo *),  a linked list of (ProcessInfo *), or a queue of (ProcessInfo *).
  * You should initialize your data structures when set_strategy() is called.*/
-void set_strategy_FIFO();
-void set_strategy_RR();
-void set_strategy_SJF();
-void set_strategy_PSJF();
+void set_strategy_FIFO(int num_process);
+void set_strategy_RR(int num_process);
+void set_strategy_SJF(int num_process);
+void set_strategy_PSJF(int num_process);
 
 /* A call to add_process() means that a new process has arrived.  Please update your data structure.
  * Its possible that multiple new processes arrive simultaneously, so don't perform a context switch. */
@@ -119,7 +118,7 @@ static inline void resume_process(pid_t pid)
 }
 
 void heap_insert(Heap *,ProcessInfo *p);
-void heap_init(Heap* p);
+void heap_init(Heap* p, int max_size);
 ProcessInfo *heap_top(Heap *);
 void heap_pop(Heap *);
 int heap_size(Heap *);

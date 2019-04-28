@@ -29,7 +29,7 @@ typedef struct TimerInfo {
 
 /* Global variables */
 ScheduleStrategy current_strategy;
-int num_process; // Number of processes s
+static int num_process; // Number of processes s
 
 /* private static variables */
 static ProcessInfo *all_process_info;
@@ -42,19 +42,19 @@ static pid_t fork_a_child(int);
 
 /* functions for interaction with scheduler */
 
-void set_strategy(ScheduleStrategy s){
+void set_strategy(ScheduleStrategy s, int max_process){
     switch (s){
         case FIFO:
-            set_strategy_FIFO();
+            set_strategy_FIFO(max_process);
             break;
         case RR:
-            set_strategy_RR();
+            set_strategy_RR(max_process);
             break;
         case SJF:
-            set_strategy_SJF();
+            set_strategy_SJF(max_process);
             break;
         case PSJF:
-            set_strategy_PSJF();
+            set_strategy_PSJF(max_process);
             break;
     }
 }
@@ -318,10 +318,10 @@ int main(void)
     char strat[PROCESS_NAME_MAX];
     scanf("%s", strat);
     current_strategy = str_to_strategy(strat);
-    set_strategy(current_strategy);
 
     read_process_info();
     arrival_queue_init();
+    set_strategy(current_strategy, num_process); 
 
     /* Signal handling */
     sigset_t oldset = block_some_signals();

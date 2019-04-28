@@ -15,8 +15,8 @@ void add_process_PSJF(ProcessInfo *new_process) {
     heap_insert(&pq, new_process);
 }
 
-void set_strategy_PSJF() {
-    heap_init(&pq);
+void set_strategy_PSJF(int num_process) {
+    heap_init(&pq, num_process);
 }
 
 void remove_current_process_PSJF(void) {

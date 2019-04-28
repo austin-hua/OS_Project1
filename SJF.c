@@ -11,8 +11,8 @@ void add_process_SJF(ProcessInfo *new_process) {
      heap_insert(&inactive_heap, new_process);
 }
 
-void set_strategy_SJF() {
-     heap_init(&inactive_heap);
+void set_strategy_SJF(int num_process) {
+     heap_init(&inactive_heap, num_process);
 }
 
 void remove_current_process_SJF(void) {

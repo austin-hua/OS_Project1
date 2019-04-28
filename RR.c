@@ -20,7 +20,7 @@ static int advance(int n) {
     return n;
 }
 
-void set_strategy_RR(void) {
+void set_strategy_RR(int num_process) {
     pq = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process);
 }
 

@@ -6,7 +6,7 @@ static int active_process_id = -1;
 static int prev_process_id = -1;
 static int count_process = 0;
 
-void set_strategy_FIFO() {
+void set_strategy_FIFO(int unused) {
 }
 
 void add_process_FIFO(ProcessInfo *p) {
