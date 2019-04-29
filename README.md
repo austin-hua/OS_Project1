@@ -15,10 +15,4 @@ For Ubuntu 16, see the link at details section here: http://rswiki.csie.org/doku
 
 Compilation: --
 
-TODO
-  Scheduler function basic prototypes need to be made
-      Shally & Annjee: Add RR & FIFO
-      Naveno & Gearlad: Add STF and PSTF
-  Split main.c among several classes
-      Schedulers
-      Other functions
+TODO: Debugging and running
