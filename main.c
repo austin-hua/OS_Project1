@@ -286,16 +286,17 @@ static void set_timer(TimerInfo *ti)
     int err = timer_settime(ti->timer_id, 0, &its, NULL);
     if(err == -1) {
         perror("timer_settime error!!!");
-        exit(err);
+        scheduler_exit(err);
     }
 }
 
 static void create_timer_and_init_timespec(TimerInfo *ti)
 {
     // Create the timer
-    if(timer_create(CLOCKID, NULL, &ti->timer_id) == -1) {
+    int err;
+    if((err = timer_create(CLOCKID, NULL, &ti->timer_id)) == -1) {
         perror("timer_create error!!!");
-        exit(0);
+        scheduler_exit(err);
     }
 
     // Init arrival_remaining and timeslice_remaining
@@ -403,6 +404,7 @@ static void read_single_entry(ProcessInfo *p)
     scanf("%d%d", &p->arrival_time, &p->time_needed);
     p->remaining_time = p->time_needed;
     p->status = NOT_STARTED;
+    p->pid = 0;
 }
 
 
@@ -659,3 +661,9 @@ void fork_signal_test(void)
     }
 }
 
+// for debugging
+void scheduler_exit(int status)
+{
+    kill(0, SIGINT);
+    exit(status);
+} 

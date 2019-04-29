@@ -102,9 +102,9 @@ inline void set_priority(pid_t pid, int priority)
     int res = sched_setscheduler(pid, SCHED_FIFO, &kernel_sched_param);
     if (res != 0){
         char errmsg[100];
-	sprintf(errmsg, "Can't set scheduler on pid %d!", pid);
+        sprintf(errmsg, "Can't set scheduler on pid %d!", pid);
         perror(errmsg);
-        exit(res);
+        scheduler_exit(res);
     }
 }
 
@@ -125,4 +125,6 @@ ProcessInfo *heap_top(Heap *);
 void heap_pop(Heap *);
 int heap_size(Heap *);
 bool heap_empty(Heap *);
+
+void schdeduler_exit(int exit_code);
 #endif
