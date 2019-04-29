@@ -13,9 +13,11 @@ The FIFO scheduler does nearly nothing, as the scheduler and its children are al
 
 The design try to seperate concerns into different part of code, and each part of code does not know each other too much. For example, the interface of job scheduler has very few parameters. remove_current_process() doens't even require the caller to provide a ProcessInfo! Because even in theory the event handler can know what process terminated by pid, it's not really the event handler's business. The event handler doesn't try to provide the PSJF scheduler any information about time, even if it can be useful. The PSJF scheduler can figure that out by itself. Since the interface only require minimum information and does not vary between policies, the event handling loop doesn't have to handle special cases. The only part that differs depending on policy is the timer part, as only RR requres an addtional timer. And that's because we try to simulate two timers with only one timer. The code can be even more elegant if we used two timers (which we obviously should, but that way it's less fun.)
 
-Sadly, the abstraction still end up being leaky. For example, it's not clear that which part of the code should be resposible for forking. The job sheduler should be only one that sets priority of children, but as we end up choosing let event handler do forking, and after forking the priority should be set immediatly, event handler also sets priority of children.
+Sadly, the abstraction still end up being leaky. For example, it's not clear that which part of the code should be resposible for forking. The job sheduler should be only one that sets priority of children, but as we end up choosing let event handler do forking, and after forking the priority should be set immediatly, event handler also sets priority of children. It's also not satisfactory that event handler has to explicitly call context_switch().
 
 ### Contributions
+Jason designed the program architecture, wrote the system calls and studied Linux FIFO scheduler.
+Michial designed the timer.
 Naveno and Seth designed the SJF and PSJF scheduling algorithms
 Seth created the header file, added functions for debugging, input, and split the functions among several classes.
 Shally and Annjee designed the RR and FIFO scheduling algorithms
