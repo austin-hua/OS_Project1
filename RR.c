@@ -68,16 +68,4 @@ void findavgTime(int processes[], int n, int time_needed[], int quantum)
     printf ("Average waiting time = %f/%f\nAverage turn around time = %f/%f", total_wt, n, total_tat, n);
 } 
 
-int main() 
-{ 
-    int processes[] = { 1, 2, 3}; 
-    int n = sizeof processes / sizeof processes[0]; 
-  
-    int burst_time[] = {10, 5, 8}; 
-
-    int quantum = 2; 
-    findavgTime(processes, n, burst_time, quantum); 
-    return 0; 
-}
-
 // Please read comments in scheduler.h to see what functions to be implemented.
