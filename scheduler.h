@@ -95,6 +95,7 @@ typedef struct Heap {
     int heap_size;
 } Heap;
 
+void scheduler_exit(int exit_code);
 inline void set_priority(pid_t pid, int priority)
 {
     struct sched_param kernel_sched_param;
@@ -126,5 +127,4 @@ void heap_pop(Heap *);
 int heap_size(Heap *);
 bool heap_empty(Heap *);
 
-void schdeduler_exit(int exit_code);
 #endif
