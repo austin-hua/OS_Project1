@@ -33,8 +33,7 @@ static int num_process; // Number of processes s
 
 /* private static variables */
 static ProcessInfo *all_process_info;
-static ProcessInfo **arrival_queue;
-static ProcessInfo **arrival_ptr;
+static ProcessInfo *arrival_ptr;
 static volatile sig_atomic_t event_type;
 
 /* fork a child */
@@ -517,35 +516,29 @@ static int processinfo_ptr_cmp(const void * lhs, const void * rhs)
 
 static void arrival_queue_init(void)
 {
-    arrival_queue = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process);
-    for(int i = 0; i < num_process; i++){
-        arrival_queue[i] = all_process_info + i;
-    }
-    qsort(arrival_queue, num_process, sizeof(ProcessInfo *),
-            processinfo_ptr_cmp);
-    arrival_ptr = arrival_queue;
+    arrival_ptr = all_process_info;
 }
 
 static int timeunits_until_next_arrival(void)
 {
     assert(!arrival_queue_empty());
-    if (arrival_ptr == &arrival_queue[0]){
-        return (*arrival_ptr)->arrival_time;
+    if (arrival_ptr == all_process_info){
+        return arrival_ptr->arrival_time;
     }
-    ProcessInfo **prev_process = arrival_ptr - 1;
-    return (*arrival_ptr)->arrival_time - (*prev_process)->arrival_time;
+    ProcessInfo *prev_process = arrival_ptr - 1;
+    return arrival_ptr->arrival_time - prev_process->arrival_time;
 }
 
 static ProcessInfo *get_arrived_process(void)
 {
-    ProcessInfo *ret = *arrival_ptr;
+    ProcessInfo *ret = arrival_ptr;
     arrival_ptr++;
     return ret;
 }
 
 static bool arrival_queue_empty(void)
 {
-    return arrival_ptr == arrival_queue + num_process;
+    return arrival_ptr == all_process_info + num_process;
 }
 
 /* The following functions are for testing */
