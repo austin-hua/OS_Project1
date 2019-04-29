@@ -235,6 +235,9 @@ static EventType get_expire_reason(TimerInfo *ti)
     if(current_strategy != RR){
         return PROCESS_ARRIVAL;
     }
+    if(arrival_queue_empty()){
+        return TIMESLICE_OVER;
+    }
     struct timespec *min = 
         min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
     if (min == &ti->arrival_remaining){
@@ -246,27 +249,22 @@ static EventType get_expire_reason(TimerInfo *ti)
 
 static void subtract_time_passed(TimerInfo *ti)
 {
-    /* If the timer expired, than time specified by the lesser of the two timespecs in ti 
-     * has passed.  As we are simulating two timers with only one timer, we have to subtract
-     * the larger timespec with the lesser of the timespecs.
-     */
-    if (current_strategy == RR) {
-        if (arrival_queue_empty()){
-            ti->timeslice_remaining.tv_sec = ti->timeslice_remaining.tv_nsec = 0;
+    if (current_strategy == RR && !arrival_queue_empty()){
+        /* This condition determines whether we are simulating one timer with
+         * two timespecs. 
+         * If the timer expired, than time specified by the lesser of the two timespecs in ti 
+         * has passed.  As we are simulating two timers with only one timer, we have to subtract
+         * the larger timespec with the lesser of the timespecs.
+         */
+        struct timespec *min = 
+            min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
+        if (min == &ti->arrival_remaining){
+            ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, *min);
+            min->tv_sec = min->tv_nsec = 0;
         } else {
-            struct timespec *min = 
-                min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
-            if (min == &ti->arrival_remaining){
-                ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, *min);
-                min->tv_sec = min->tv_nsec = 0;
-            } else {
-                ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, *min);
-                min->tv_sec = min->tv_nsec = 0;
-            }
+            ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, *min);
+            min->tv_sec = min->tv_nsec = 0;
         }
-    } else {
-        // In non-RR strategy, there is only one timer. No subtraction is needed.
-        ti->arrival_remaining.tv_sec = ti->arrival_remaining.tv_nsec = 0;
     }
 }
 
