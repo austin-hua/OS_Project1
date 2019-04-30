@@ -17,7 +17,7 @@ Sadly, the abstraction still ends up being leaky. For example, it's not clear th
 
 ### Contributions
 Jason designed the program architecture, wrote the system calls and studied Linux FIFO scheduler.
-Michial designed the timer.
+Michl designed the timer.
 Naveno and Seth designed the SJF and PSJF scheduling algorithms
 Seth created the header file, added functions for debugging, input, and split the functions among several classes.
 Shally and Ann Jee designed the RR and FIFO scheduling algorithms
