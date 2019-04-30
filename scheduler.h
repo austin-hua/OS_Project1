@@ -108,13 +108,12 @@ inline void set_priority(pid_t pid, int priority)
     }
 }
 
-static inline void suspend_process(pid_t pid)
-{
+static inline void suspend_process(pid_t pid) {
     set_priority(pid, sched_get_priority_min(SCHED_FIFO));
     // kill(pid, SIGSTOP);
 }
-static inline void resume_process(pid_t pid)
-{
+
+static inline void resume_process(pid_t pid) {
     set_priority(pid, sched_get_priority_max(SCHED_FIFO)-1);
     // kill(pid, SIGCONT);
 }
