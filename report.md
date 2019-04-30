@@ -20,4 +20,4 @@ Jason designed the program architecture, wrote the system calls and studied Linu
 Michial designed the timer.
 Naveno and Seth designed the SJF and PSJF scheduling algorithms
 Seth created the header file, added functions for debugging, input, and split the functions among several classes.
-Shally and Annjee designed the RR and FIFO scheduling algorithms
+Shally and Ann Jee designed the RR and FIFO scheduling algorithms
