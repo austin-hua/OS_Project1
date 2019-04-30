@@ -18,25 +18,19 @@ def line_filter(strings):
 class TimeInfo:
     def __init__(self, string):
         sec, nano_sec = string.split('.')
-        self.sec = int(sec) 
         self.nsec = int(nano_sec)
-        leading_zeroes = len(nano_sec) - len(str(self.nsec))
-        self.nsec /= pow(10, leading_zeroes)
+        self.nsec += int(sec) * (10**9)
 
     def __sub__(self, other):
         if not isinstance(other, TimeInfo):
             return NotImplemented
         res = copy(self)
-        res.sec -= other.sec
         res.nsec -= other.nsec 
-        if res.nsec < 0:
-            res.nsec += pow(10,9)
-            res.sec -= 1
         return res
 
-    def __str__(self):
+    def __str__(self): 
+        return str(self.nsec / pow(10, 9))
         
-        return str(self.sec + self.nsec / 10.0)
 
 if __name__ == '__main__':
     try:
