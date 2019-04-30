@@ -9,7 +9,7 @@ void heap_init(Heap* h, int max_size) {
 static bool heap_element_lt(Heap *h, int lhsIdx, int rhsIdx) {
     const ProcessInfo *lhs = h->pq[lhsIdx];
     const ProcessInfo *rhs = h->pq[rhsIdx];
-    if (lhs->remaining_time == rhs->remaining_time){
+    if (lhs->remaining_time == rhs->remaining_time) {
         return lhs->pid < rhs->pid;
     }
     return lhs->remaining_time < rhs->remaining_time;
@@ -56,13 +56,13 @@ ProcessInfo *heap_top(Heap *h) {
 static void downheap(Heap *h, int parentIdx) {
      while(lchild(parentIdx) < h->heap_size) {
          int minIdx = parentIdx;
-         if (heap_element_lt(h, lchild(parentIdx), minIdx)){ 
+         if (heap_element_lt(h, lchild(parentIdx), minIdx)) { 
              minIdx = lchild(parentIdx);
          }
-         if (rchild(parentIdx) < h->heap_size && heap_element_lt(h, rchild(parentIdx), minIdx)){
+         if (rchild(parentIdx) < h->heap_size && heap_element_lt(h, rchild(parentIdx), minIdx)) {
              minIdx = rchild(parentIdx);
          }
-         if (parentIdx == minIdx){
+         if (parentIdx == minIdx) {
              break;
          } 
          heap_swap(h, parentIdx, minIdx);
