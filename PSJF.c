@@ -28,12 +28,12 @@ void remove_current_process_PSJF(void) {
 }
 
 void context_switch_PSJF(void) {
-    if(active_process != NULL){
+    if(active_process != NULL) {
         active_process->remaining_time -= (current_time - last_context_switch_time);
     }
 
-    if (!heap_empty(&pq) && active_process != heap_top(&pq)){
-        if (active_process != NULL){
+    if (!heap_empty(&pq) && active_process != heap_top(&pq)) {
+        if (active_process != NULL) {
             suspend_process(active_process->pid);
         }
         active_process = heap_top(&pq);
