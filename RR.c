@@ -24,7 +24,6 @@ void set_strategy_RR(int num_process) {
     pq = (ProcessInfo **) malloc(sizeof(ProcessInfo *) * num_process);
 }
 
-
 void add_process_RR(ProcessInfo *p) {
     if (process_count == 0){
         assert(previous_active_id < 0);

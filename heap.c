@@ -6,8 +6,7 @@ void heap_init(Heap* h, int max_size) {
      h->heap_size = 0;
 }
 
-static bool heap_element_lt(Heap *h, int lhsIdx, int rhsIdx)
-{
+static bool heap_element_lt(Heap *h, int lhsIdx, int rhsIdx) {
     const ProcessInfo *lhs = h->pq[lhsIdx];
     const ProcessInfo *rhs = h->pq[rhsIdx];
     if (lhs->remaining_time == rhs->remaining_time){
@@ -16,18 +15,15 @@ static bool heap_element_lt(Heap *h, int lhsIdx, int rhsIdx)
     return lhs->remaining_time < rhs->remaining_time;
 }
 
-static int lchild(int parentIdx)
-{
+static int lchild(int parentIdx) {
     return parentIdx * 2 + 1;
 }
 
-static int rchild(int parentIdx)
-{
+static int rchild(int parentIdx) {
     return parentIdx * 2 + 2;
 }
 
-static int parent(int childIdx)
-{
+static int parent(int childIdx) {
     return (childIdx - 1)/2;
 }
 
@@ -84,6 +80,6 @@ int heap_size(Heap *h) {
      return h->heap_size;
 }
 
-bool heap_empty(Heap *h){
+bool heap_empty(Heap *h) {
     return h->heap_size == 0;
 }

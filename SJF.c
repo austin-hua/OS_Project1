@@ -20,7 +20,7 @@ void remove_current_process_SJF(void) {
 }
 
 void context_switch_SJF(void) {
-     if (active_process != NULL){
+     if (active_process != NULL) {
           return; // No preemption in SJF
      }
      active_process = heap_top(&inactive_heap);

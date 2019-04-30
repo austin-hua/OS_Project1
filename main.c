@@ -41,8 +41,8 @@ static pid_t fork_a_child(int);
 
 /* functions for interaction with scheduler */
 
-void set_strategy(ScheduleStrategy s, int max_process){
-    switch (s){
+void set_strategy(ScheduleStrategy s, int max_process) {
+    switch (s) {
         case FIFO:
             set_strategy_FIFO(max_process);
             break;
@@ -58,10 +58,10 @@ void set_strategy(ScheduleStrategy s, int max_process){
     }
 }
 
-void add_process(ProcessInfo *p){
+void add_process(ProcessInfo *p) {
     p->pid = fork_a_child(p->time_needed);
     suspend_process(p->pid);
-    switch (current_strategy){
+    switch (current_strategy) {
         case FIFO:
             add_process_FIFO(p);
             break;
@@ -77,9 +77,8 @@ void add_process(ProcessInfo *p){
     }
 }
 
-void remove_current_process(void)
-{
-    switch (current_strategy){
+void remove_current_process(void) {
+    switch (current_strategy) {
         case FIFO:
             remove_current_process_FIFO();
             break;
@@ -95,15 +94,13 @@ void remove_current_process(void)
     }
 }
 
-void timeslice_over(void)
-{
+void timeslice_over(void) {
     assert(current_strategy == RR);
     timeslice_over_RR();
 }
 
-void context_switch(void)
-{
-    switch (current_strategy){
+void context_switch(void) {
+    switch (current_strategy) {
         case FIFO:
             context_switch_FIFO();
             break;
@@ -119,9 +116,8 @@ void context_switch(void)
     }
 }
 
-static bool scheduler_empty(void)
-{
-    switch (current_strategy){
+static bool scheduler_empty(void) {
+    switch (current_strategy) {
         case FIFO:
             return scheduler_empty_FIFO();
         case RR:
@@ -139,10 +135,9 @@ static void set_my_priority(int priority);
 static void set_parent_priority(void);
 static void set_child_priority(void);
 
-pid_t my_fork()
-{
+pid_t my_fork() {
     pid_t fork_res = fork();
-    if (fork_res == 0){
+    if (fork_res == 0) {
         set_child_priority();
     }
     return fork_res;
@@ -151,8 +146,7 @@ pid_t my_fork()
 void sys_log_process_start(ProcessTimeRecord *);
 void sys_log_process_end(ProcessTimeRecord *);
 
-pid_t fork_a_child(int child_run_time)
-{
+pid_t fork_a_child(int child_run_time) {
     pid_t child_pid = my_fork();
     if (child_pid != 0){
         return child_pid;
@@ -160,7 +154,7 @@ pid_t fork_a_child(int child_run_time)
     ProcessTimeRecord time_record;
     time_record.pid = getpid();
     sys_log_process_start(&time_record);
-    for(int i = 0; i < child_run_time; i++){
+    for(int i = 0; i < child_run_time; i++) {
         run_single_unit();
     }
     sys_log_process_end(&time_record);
@@ -175,16 +169,14 @@ static ScheduleStrategy str_to_strategy(char strat[]);
 static sigset_t block_some_signals(void);
 
 /* Costumize signal handlers */
-static void signal_handler(int signo)
-{
+static void signal_handler(int signo) {
     if(signo == SIGCHLD)
         event_type = CHILD_TERMINATED;
     else if(signo == SIGALRM)
         event_type = TIMER_EXPIRED;
 }
 
-static void costumize_signal_handlers(void)
-{
+static void costumize_signal_handlers(void) {
     struct sigaction sig_act;
     sig_act.sa_flags = 0;
     sigemptyset(&sig_act.sa_mask);
@@ -203,34 +195,32 @@ static int timeunits_until_next_arrival(void);
 static ProcessInfo *get_arrived_process(void);
 static bool arrival_queue_empty(void);
 
-static struct timespec *min_timespecp(struct timespec *lhs, struct timespec *rhs)
-{
+static struct timespec *min_timespecp(struct timespec *lhs, struct timespec *rhs) {
     struct timespec diff = timespec_subtract(*lhs, *rhs);
     if (diff.tv_sec < 0 || diff.tv_nsec < 0){
         return lhs;
-    } else {
+    }
+    else {
         return rhs;
     }
 }
 
-static void init_arrival_remaining(TimerInfo *ti)
-{
+static void init_arrival_remaining(TimerInfo *ti) {
     ti->arrival_remaining = timespec_multiply(ti->time_unit, timeunits_until_next_arrival());
     if(timeunits_until_next_arrival() == 0){
         // The first signal may arrive immediately, in which case someone needs to send a signal.
         raise(SIGALRM);
     }
 }
-static void init_timeslice_remaining(TimerInfo *ti)
-{
+
+static void init_timeslice_remaining(TimerInfo *ti) {
     if(current_strategy != RR) {
         return;
     }
     ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
 }
 
-static EventType get_expire_reason(TimerInfo *ti)
-{
+static EventType get_expire_reason(TimerInfo *ti) {
     if(current_strategy != RR){
         return PROCESS_ARRIVAL;
     }
@@ -241,13 +231,13 @@ static EventType get_expire_reason(TimerInfo *ti)
         min_timespecp(&ti->arrival_remaining, &ti->timeslice_remaining);
     if (min == &ti->arrival_remaining){
         return PROCESS_ARRIVAL;
-    } else {
+    }
+    else {
         return TIMESLICE_OVER;
     }
 }
 
-static void subtract_time_passed(TimerInfo *ti)
-{
+static void subtract_time_passed(TimerInfo *ti) {
     if (current_strategy == RR && !arrival_queue_empty()){
         /* This condition determines whether we are simulating one timer with
          * two timespecs. 
@@ -260,22 +250,24 @@ static void subtract_time_passed(TimerInfo *ti)
         if (min == &ti->arrival_remaining){
             ti->timeslice_remaining = timespec_subtract(ti->timeslice_remaining, *min);
             min->tv_sec = min->tv_nsec = 0;
-        } else {
+        }
+	else {
             ti->arrival_remaining = timespec_subtract(ti->arrival_remaining, *min);
             min->tv_sec = min->tv_nsec = 0;
         }
     }
 }
 
-static void set_timer(TimerInfo *ti)
-{
+static void set_timer(TimerInfo *ti) {
     struct itimerspec its;
     its.it_interval.tv_sec = its.it_interval.tv_nsec = 0;
     if (current_strategy != RR){
         its.it_value = ti->arrival_remaining;
-    } else if (arrival_queue_empty()){
+    }
+    else if (arrival_queue_empty()){
         its.it_value = ti->timeslice_remaining;
-    } else { 
+    }
+    else { 
         // To simulate two timers with only one timer, the timer should
         // send an alarm when the lesser of the timespec has passed.
         struct timespec *min = 
@@ -289,8 +281,7 @@ static void set_timer(TimerInfo *ti)
     }
 }
 
-static void create_timer_and_init_timespec(TimerInfo *ti)
-{
+static void create_timer_and_init_timespec(TimerInfo *ti) {
     // Create the timer
     int err;
     if((err = timer_create(CLOCKID, NULL, &ti->timer_id)) == -1) {
@@ -306,27 +297,23 @@ static void create_timer_and_init_timespec(TimerInfo *ti)
     set_timer(ti);
 }
 
-static void assert_nonnegetive_remaining(struct timespec remaining)
-{
+static void assert_nonnegetive_remaining(struct timespec remaining) {
     assert(remaining.tv_sec >= 0 && remaining.tv_nsec >= 0);
 }
 
-static bool timspec_is_zero(struct timespec remaining)
-{
+static bool timspec_is_zero(struct timespec remaining) {
     if(remaining.tv_sec == 0 && remaining.tv_nsec == 0)
         return true;
     else
         return false;
 }
 
-static void update_arrival_remaining(TimerInfo *ti, int time_units)
-{
+static void update_arrival_remaining(TimerInfo *ti, int time_units) {
     assert_nonnegetive_remaining(ti->arrival_remaining);
     ti->arrival_remaining = timespec_multiply(ti->time_unit, time_units);
 }
 
-static void update_timeslice_remaining(TimerInfo *ti)
-{
+static void update_timeslice_remaining(TimerInfo *ti) {
     if(current_strategy != RR) {
         return;
     }
@@ -334,8 +321,7 @@ static void update_timeslice_remaining(TimerInfo *ti)
     ti->timeslice_remaining = timespec_multiply(ti->time_unit, RR_TIMES_OF_UNIT);
 }
 
-int main(void)
-{
+int main(void) {
     set_parent_priority();
     char strat[PROCESS_NAME_MAX];
     scanf("%s", strat);
@@ -362,7 +348,8 @@ int main(void)
             if(event_type == TIMESLICE_OVER) {
                 timeslice_over();
                 update_timeslice_remaining(&timer_info);
-            } else if(event_type == PROCESS_ARRIVAL) {
+            }
+	    else if(event_type == PROCESS_ARRIVAL) {
                 add_process(get_arrived_process());
                 int arrival_time = 0;
                 while(!arrival_queue_empty() && (arrival_time = timeunits_until_next_arrival()) == 0) {
@@ -371,13 +358,15 @@ int main(void)
                 update_arrival_remaining(&timer_info, arrival_time);
             }
             set_timer(&timer_info);
-        } else if(event_type == CHILD_TERMINATED) {
+        } 
+	else if(event_type == CHILD_TERMINATED) {
             wait(NULL);
             remove_current_process();
         }
         if (arrival_queue_empty() && scheduler_empty()){
             break;
-        } else {
+        } 
+	else {
             context_switch();
         }
     }
@@ -395,8 +384,7 @@ static ScheduleStrategy str_to_strategy(char strat[]) {
     assert(0);
 }
 
-static void read_single_entry(ProcessInfo *p)
-{
+static void read_single_entry(ProcessInfo *p) {
     char *process_name = (char *)malloc(sizeof(char) * PROCESS_NAME_MAX);
     scanf("%s", process_name);
     p->name = process_name;
@@ -418,19 +406,16 @@ static sigset_t block_some_signals(void) {
 }
 
 /* Systemcall wrapper */
-void sys_log_process_start(ProcessTimeRecord *p)
-{
+void sys_log_process_start(ProcessTimeRecord *p) {
     // Process start time is logged at user space for performance reasons.
     syscall(335, p->pid, &p->start_time);
 }
 
-void sys_log_process_end(ProcessTimeRecord *p)
-{
+void sys_log_process_end(ProcessTimeRecord *p) {
     syscall(336, p->pid, &p->start_time);
 }
 
-static void read_process_info(void)
-{
+static void read_process_info(void) {
     scanf("%d", &num_process);
 
     all_process_info =  (ProcessInfo *) malloc(num_process * sizeof(ProcessInfo));
@@ -442,32 +427,27 @@ static void read_process_info(void)
 
 extern inline void set_priority(pid_t pid, int priority);
 /* For controlling kernel scheduling */
-static void set_my_priority(int priority)
-{
+static void set_my_priority(int priority) {
     set_priority(getpid(), priority);
 }
 
-static void set_parent_priority(void)
-{
+static void set_parent_priority(void) {
     int priority = sched_get_priority_max(SCHED_FIFO);
     set_my_priority(priority);
 }
 
-static void set_child_priority(void)
-{
+static void set_child_priority(void) {
     int priority = sched_get_priority_max(SCHED_FIFO);
     priority -= 1;
     set_my_priority(priority);
 }
 
-static bool parent_is_terminated(void)
-{
+static bool parent_is_terminated(void) {
     // The parent terminated so the child is adopted by init (whose pid is 1)
     return getppid() == 1;
 }
 
-static struct timespec timespec_multiply(struct timespec timespec, int n)
-{
+static struct timespec timespec_multiply(struct timespec timespec, int n) {
     timespec.tv_sec *= n;
     int64_t temp = timespec.tv_nsec * n; // 64_bit to prevent overflow
     timespec.tv_sec += temp / BILLION;
@@ -475,8 +455,7 @@ static struct timespec timespec_multiply(struct timespec timespec, int n)
     return timespec;
 }
 
-static struct timespec timespec_divide(struct timespec timespec , int n)
-{
+static struct timespec timespec_divide(struct timespec timespec , int n) {
     int64_t total_nsec = timespec.tv_sec * BILLION + timespec.tv_nsec;
     total_nsec /= n;
     timespec.tv_sec = total_nsec / BILLION;
@@ -484,8 +463,7 @@ static struct timespec timespec_divide(struct timespec timespec , int n)
     return timespec;
 }
 
-static struct timespec timespec_subtract(struct timespec lhs, struct timespec rhs)
-{
+static struct timespec timespec_subtract(struct timespec lhs, struct timespec rhs) {
     lhs.tv_sec -= rhs.tv_sec;
     lhs.tv_nsec -= rhs.tv_nsec;
     if (lhs.tv_nsec < 0){
@@ -495,8 +473,7 @@ static struct timespec timespec_subtract(struct timespec lhs, struct timespec rh
     return lhs;
 }
 
-static struct timespec measure_time_unit(void)
-{
+static struct timespec measure_time_unit(void) {
     struct timespec begin, end;
     clock_gettime(CLOCKID, &begin);
     for(int i = 0; i < UNIT_MEASURE_REPEAT; i++){
@@ -507,8 +484,7 @@ static struct timespec measure_time_unit(void)
     return timespec_divide(res, UNIT_MEASURE_REPEAT);
 }
 
-static int processinfo_ptr_cmp(const void * lhs, const void * rhs)
-{
+static int processinfo_ptr_cmp(const void * lhs, const void * rhs) {
     const ProcessInfo * const * lhs_p = lhs;
     const ProcessInfo * const * rhs_p = rhs;
     return  (**lhs_p).arrival_time - (**rhs_p).arrival_time;
@@ -519,8 +495,7 @@ static void arrival_queue_init(void)
     arrival_ptr = all_process_info;
 }
 
-static int timeunits_until_next_arrival(void)
-{
+static int timeunits_until_next_arrival(void) {
     assert(!arrival_queue_empty());
     if (arrival_ptr == all_process_info){
         return arrival_ptr->arrival_time;

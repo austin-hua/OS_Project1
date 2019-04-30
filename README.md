@@ -15,4 +15,5 @@ For Ubuntu 16, see the link at details section here: http://rswiki.csie.org/doku
 
 Compilation: --
 
-TODO: Debugging and running
+TODO: Testing and writing report.
+Don't test with RR_4.txt, though. It doesn't follow the requirement of the project.
