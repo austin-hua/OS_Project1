@@ -10,12 +10,11 @@
 
 #define ITERATION_PER_TIMEUNIT 1000000UL // one unit, one million iterations
 
-/* Data structures */
-typedef enum ProcessStatus {
+typedef enum ProcessStatus {    // data structures
     NOT_STARTED, RUNNING, STOPPED
 } ProcessStatus;
 
-typedef enum EventType{
+typedef enum EventType {
     TIMER_EXPIRED, CHILD_TERMINATED, TIMESLICE_OVER, PROCESS_ARRIVAL
 } EventType;
 
@@ -33,7 +32,7 @@ typedef struct ProcessInfo {
     char *name; // Not an array; please allocate memory before writing.
 } ProcessInfo;
 
-typedef enum scheduleStrategy {
+typedef enum scheduleStrategy { // for input
     FIFO, RR, SJF, PSJF
 } ScheduleStrategy;
 
