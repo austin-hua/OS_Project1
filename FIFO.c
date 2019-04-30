@@ -2,8 +2,7 @@
 
 static int count_process = 0;
 
-void set_strategy_FIFO(int unused) {
-}
+void set_strategy_FIFO(int unused) {} // no data structures needed
 
 void add_process_FIFO(ProcessInfo *p) {
     resume_process(p->pid);
@@ -12,11 +11,9 @@ void add_process_FIFO(ProcessInfo *p) {
 
 void remove_current_process_FIFO(void) {
     count_process--;
-
 }
 
-void context_switch_FIFO(void) {
-}
+void context_switch_FIFO(void) {} // unused
 
 bool scheduler_empty_FIFO(void) {
     return count_process == 0;
