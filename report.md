@@ -17,26 +17,27 @@ Sadly, the abstraction still ends up being leaky. For example, it's not clear th
 
 ### Contributions
 * Jason 
-  * designed the program architecture
-  * wrote the system calls 
-  * studied Linux FIFO scheduler
-  * tested and debugged the whole program
-  * wrote report
+  * Led the project team
+  * Designed the program architecture
+  * Wrote the system calls 
+  * Studied Linux FIFO scheduler
+  * Tested and debugged the whole program
+  * Wrote report
   
 * Michael 
-   * designed the timer
-   
-* Naveno 
+   * Designed the timer
 
 * Seth 
-  * designed the SJF and PSJF scheduling algorithms
-  * designed heap for process scheduling
-  * help organizing header files
+  * Designed the SJF and PSJF scheduling algorithms
+  * Designed heap for process scheduling
+  * Helped create the Github and organized header files
   
 * Ann Jee
-  * designed FIFO scheduling algorithm
-  * updated coding style and report
+  * Designed FIFO scheduling algorithm
+  * Updated coding style and report
   
  * Shally 
-   * designed the RR algorithms
-   * updated the coding style and report
+   * Designed the RR algorithms
+   * Updated the coding style and report
+   
+ * Naveno
