@@ -125,7 +125,6 @@ RR_5
 
 |Name|Time units in theory|Raw time | Actual time units | Error(%)|
 |---|---|---|---|---|
-|Name|Time units in theory|Raw time | Actual time units | Error(%)|
 |P1|23000|38.17479163|22880.99378|-0.51741834
 |P2|19000|31.62218322|18953.52789|-0.244590062
 |P3|12500|20.83936998|12490.5854|-0.075316798
@@ -150,6 +149,7 @@ SJF_1
 |P4|4000|6.653709821|3988.063498|-0.298412539
 
 SJF_2
+
 |---|---|---|---|---|
 |Name|Time units in theory|Raw time | Actual time units | Error(%)|
 |P1|100|0.188898062|113.2206673|13.2206673
@@ -159,6 +159,7 @@ SJF_2
 |P5|7000|11.61413236|6961.213903|-0.554087095
 
 SJF_3
+
 |---|---|---|---|---|
 |Name|Time units in theory|Raw time | Actual time units | Error(%)|
 |P1|3000|4.975175821|2981.993147|-0.600228425
@@ -171,6 +172,7 @@ SJF_3
 |P8|9000|14.87250402|8914.198548|-0.953349468
 
 SJF_4
+
 |---|---|---|---|---|
 |Name|Time units in theory|Raw time | Actual time units | Error(%)|
 |P1|3000|4.962262529|2974.25325|-0.858224991
@@ -180,6 +182,7 @@ SJF_4
 |P5|1000|1.651970147|990.1486571|-0.985134294
 
 SJF_5
+
 |---|---|---|---|---|
 |Name|Time units in theory|Raw time | Actual time units | Error(%)|
 |P1|2000|3.354628711|2010.678655|0.533932746
