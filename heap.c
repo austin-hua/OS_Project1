@@ -84,6 +84,6 @@ int heap_size(Heap *h) {
      return h->heap_size;
 }
 
-bool heap_empty(Heap *h){
+bool heap_empty(Heap *h) {
     return h->heap_size == 0;
 }
