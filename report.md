@@ -37,7 +37,7 @@ Sadly, the abstraction still ends up being leaky. For example, it's not clear th
   * Updated coding style and report
   
  * Shally 
-   * Designed the RR algorithms
+   * Designed the RR scheduling algorithm
    * Updated the coding style and report
    
  * Naveno
