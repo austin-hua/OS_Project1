@@ -25,14 +25,14 @@ void set_strategy_RR(int num_process) {
 }
 
 void add_process_RR(ProcessInfo *p) {
-    if (process_count == 0){
+    if (process_count == 0) {
         assert(previous_active_id < 0);
         current_process_id = 0;
         pq[current_process_id] = p;
     } else {
         memmove(pq + current_process_id + 1,
                 pq + current_process_id,
-                sizeof(ProcessInfo *) * (process_count - current_process_id) );
+                sizeof(ProcessInfo *) * (process_count - current_process_id));
         pq[current_process_id] = p;
         current_process_id++;
     }
@@ -40,16 +40,16 @@ void add_process_RR(ProcessInfo *p) {
 }
 
 void remove_current_process_RR(void) {
-    if (current_process_id + 1 != process_count){ // so pq + current_process_id + 1 is a valid memory location
+    if (current_process_id + 1 != process_count) { // so pq + current_process_id + 1 is a valid memory location
         memmove(pq + current_process_id ,
                 pq + current_process_id + 1,
                 sizeof(ProcessInfo *) * (process_count - (current_process_id + 1)));
     }
     previous_active_id = -1;
     process_count--;
-    if (process_count == 0){
+    if (process_count == 0) {
         current_process_id = -1;
-    } else if (current_process_id == process_count){
+    } else if (current_process_id == process_count) {
         current_process_id = 0;
     }
 }
@@ -60,10 +60,10 @@ void timeslice_over_RR(void) {
 }
 
 void context_switch_RR(void) {
-    if (previous_active_id >= 0){
+    if (previous_active_id >= 0) {
         suspend_process(pq[previous_active_id]->pid);
     }
-    if (current_process_id >= 0){
+    if (current_process_id >= 0) {
         resume_process(pq[current_process_id]->pid);
     }
 }
