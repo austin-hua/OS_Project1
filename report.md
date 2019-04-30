@@ -16,8 +16,4 @@ The design tries to separate concerns into different parts of the code, and each
 Sadly, the abstraction still ends up being leaky. For example, it's not clear that which part of the code should be responsible for forking. The job scheduler should be the only one that sets the priority of children, but as we ended up letting event handler do fork, and after forking the priority should be set immediately, event handler also sets the priority of children. It's also not satisfactory that the event handler has to explicitly call context_switch().
 
 ### Contributions
-Jason designed the program architecture, wrote the system calls and studied Linux FIFO scheduler.
-Michael designed the timer.
-Naveno and Seth designed the SJF and PSJF scheduling algorithms
-Seth created the header file, added functions for debugging, input, and split the functions among several classes.
-Shally and Ann Jee designed the RR and FIFO scheduling algorithms
+Jason designed the program architecture, wrote the system calls and studied Linux FIFO scheduler. Michael designed the timer. Naveno and Seth designed the SJF and PSJF scheduling algorithms. Shally and Ann Jee designed the RR and FIFO scheduling algorithms.
