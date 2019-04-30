@@ -241,4 +241,10 @@ PSJF_5
 There's not much surprise here, except PSJF_5 also has a process with longer run time. But it's the same data set as SJF_2, so it's still not a surprise. P1's long runtime doesn't show up in the other machine, too.
 
 ### Contributions
-Jason designed the program architecture, wrote the system calls, studied Linux FIFO scheduler, and wrote the report. Michael designed the timer. Naveno and Seth designed the SJF and PSJF scheduling algorithms. Shally and Ann Jee designed the RR and FIFO scheduling algorithms.
+Jason designed the program architecture, wrote the system calls, studied Linux FIFO scheduler, and wrote the report. 
+
+Michael designed the timer. 
+
+Naveno and Seth designed the SJF and PSJF scheduling algorithms. 
+
+Shally and Ann Jee designed the RR and FIFO scheduling algorithms.
