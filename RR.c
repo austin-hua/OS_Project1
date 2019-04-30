@@ -25,8 +25,8 @@ void set_strategy_RR(int num_process) {
 }
 
 void add_process_RR(ProcessInfo *p) {
-    if (process_count == 0) {
-        assert(previous_active_id < 0);
+    if (process_count == 0){
+        assert(previous_active_id < 0); // makes sure the last event is remove_current_process().
         current_process_id = 0;
         pq[current_process_id] = p;
     } else {
