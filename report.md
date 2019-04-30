@@ -24,6 +24,58 @@ Sadly, the abstraction still ends up being leaky. For example, it's not clear th
 ### Experiment result
 RR_4 isn't tested, since the course website says the ready time won't be a multiple of 500, and our code works only if it holds, but RR_4 doesn't follow that. The average time for every 500 time units is 0.834203 seconds.
 
+FIFO 1
+
+|Name|Time units in theory|Raw time | Actual time units | Error(%)|
+|---|---|---|---|---|
+|P1|500|0.829708368|497.305976|-0.538804794
+|P2|500|0.831356201|498.293645|-0.341271002
+|P3|500|0.832690536|499.0934113|-0.181317747
+|P4|500|0.834078067|499.9250619|-0.014987628
+|P5|500|0.830649216|497.8698963|-0.426020748
+
+FIFO 2
+
+|Name|Time units in theory|Raw time | Actual time units | Error(%)|
+|---|---|---|---|---|
+|P1|80000|133.2345318|79857.37092|-0.178286351
+|P2|5000|8.311089352|4981.454402|-0.370911962
+|P3|1000|1.65997759|994.9481136|-0.505188639
+|P4|1000|1.663261959|996.9166804|-0.308331961
+
+FIFO 3
+
+|Name|Time units in theory|Raw time | Actual time units | Error(%)|
+|---|---|---|---|---|
+|P1|8000|13.33500385|7992.660263|-0.091746709
+|P2|5000|8.297385958|4973.240938|-0.53518124
+|P3|3000|4.993810184|2993.162108|-0.227929738
+|P4|1000|1.660689867|995.3750342|-0.462496577
+|P5|1000|1.664356267|997.5725806|-0.242741938
+|P6|1000|1.662496555|996.4579168|-0.354208319
+|P7|4000|6.642474889|3981.329568|-0.466760812
+
+FIFO 4
+
+|Name|Time units in theory|Raw time | Actual time units | Error(%)|
+|---|---|---|---|---|
+|P1|2000|3.330026679|1995.932826|-0.203358693
+|P2|500|0.832071056|498.7221108|-0.255577841
+|P3|200|0.334346044|200.3984679|0.199233946
+|P4|500|0.830628798|497.8576582|-0.428468353
+
+FIFO 5
+
+|Name|Time units in theory|Raw time | Actual time units | Error(%)|
+|---|---|---|---|---|
+|P1|8000|13.38984247|8025.52913|0.31911412
+|P2|5000|8.311041178|4981.425528|-0.371489447
+|P3|3000|4.985145414|2987.968666|-0.401044456
+|P4|1000|1.659426942|994.6180693|-0.538193072
+|P5|1000|1.660263305|995.1193639|-0.488063613
+|P6|1000|1.660444571|995.2280101|-0.477198992
+|P7|4000|6.640286675|3980.018008|-0.4995498
+
 
 ### Contributions
 Jason designed the program architecture, wrote the system calls and studied Linux FIFO scheduler. Michael designed the timer. Naveno and Seth designed the SJF and PSJF scheduling algorithms. Shally and Ann Jee designed the RR and FIFO scheduling algorithms.
