@@ -13,6 +13,8 @@ It's easy to compile the kernel, but the installation process may differ by your
 A good instruction for Archlinux is at: https://wiki.archlinux.org/index.php/Kernel/Traditional_compilation 
 For Ubuntu 16, see the link at details section here: http://rswiki.csie.org/dokuwiki/courses:104_2:homework_1
 
+-------
+
 ### Architecture
 **OS_PJ1_Test** -> Files for test data<br>
 
